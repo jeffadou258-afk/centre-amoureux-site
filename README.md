@@ -85,3 +85,51 @@ fond clair. Texte orange = `--brand-ink #A64C0B`, texte doré = `--gold-ink
 Statique. Vercel (le `vercel.json` porte la CSP), Netlify, ou tout hébergeur
 de fichiers. Après déploiement : renseigner `EGLISE["site"]` (canonical, OG,
 sitemap, robots) puis régénérer.
+
+## Administration (dossier `admin/`)
+
+Le secrétariat publie lui-même les affiches, traite les demandes de prière et
+valide les témoignages. Aucune ligne de code à toucher.
+
+```bash
+python3 admin/serveur.py                     # http://127.0.0.1:4400
+python3 admin/serveur.py --motdepasse '…'    # définir / changer le mot de passe
+```
+
+| Écran | Ce qu'il fait |
+|---|---|
+| Tableau de bord | compteurs + prochaines affiches |
+| Affiches & événements | publier une veillée / convention avec affiche (JPG, PNG, WEBP — 4 Mo), supprimer |
+| Demandes de prière | lire, marquer comme traitée, supprimer — jamais publiées sur le site |
+| Témoignages | publier ou refuser — rien n'apparaît sans validation |
+
+Ce qui est publié est **exporté automatiquement** vers
+`assets/data/agenda.json`, `affiches.json`, `temoignages.json`, lus par le site
+statique. Le site reste donc déployable sur n'importe quel hébergeur ; seul ce
+serveur doit tourner de façon persistante.
+
+### Brancher les formulaires du site
+
+Dans `assets/js/config.js` :
+
+```js
+window.CAD_API = "https://admin.centre-des-amoureux.org";
+```
+
+Les formulaires de prière et de témoignage envoient alors réellement
+(`POST /api/priere`, `/api/temoignage`) et la demande arrive dans
+l'administration. Si `CAD_API` reste vide, ils composent un message dans la
+messagerie du visiteur — jamais de faux succès.
+
+### Sécurité en place
+
+Mot de passe haché PBKDF2 (240 000 itérations) · session signée HMAC, cookie
+`HttpOnly` + `SameSite=Strict`, 12 h · jeton CSRF sur chaque écriture ·
+validation binaire des images, 4 Mo max, nom aléatoire, écriture bornée au
+dossier `assets/img/affiches` · aucune écriture hors des dossiers prévus ·
+CSP `script-src 'none'` sur les pages d'administration · quota de 30 envois
+par heure et par IP sur l'API publique.
+
+⚠️ **Le serveur d'administration écoute sur `127.0.0.1`** : il n'est pas
+exposé à Internet en l'état. Pour le mettre en ligne, il faut un hébergement
+(VPS/ Render / Fly) derrière HTTPS, et changer le mot de passe provisoire.
