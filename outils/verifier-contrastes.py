@@ -126,25 +126,71 @@ PAIRES = [
     ("monogramme blanc sur or", "#FFFFFF", BRAND2, 4.5, "logo"),
 ]
 
-echecs = 0
-exempts = 0
-print("\n%-44s %8s %6s  %s" % ("PAIRE", "RATIO", "SEUIL", "ÉTAT"))
-print("-" * 78)
-for libelle, avant, arriere, seuil, exemption in PAIRES:
-    r = ratio(avant, arriere)
-    if exemption:
-        etat = "exempté (%s)" % exemption
-        exempts += 1
-    elif r + 1e-9 >= seuil:
-        etat = "conforme"
-    else:
-        etat = "ÉCHEC"
-        echecs += 1
-    print("%-44s %8.2f %6.1f  %s" % (libelle, r, seuil, etat))
+# Paire du thème « nuit & or » (cahier des charges) — mêmes rôles, autres jetons
+NAVY = {
+    "brand": "#16305A", "brand2": "#C9A227", "brand3": "#0B1F3D",
+    "brand_ink": "#12365F", "gold_ink": "#7A5C12",
+    "ink": "#0F1A2B", "ink2": "#33415C", "muted": "#5B6779",
+    "paper": "#FCFCFD", "surface": "#FFFFFF", "surface2": "#F3F5F9",
+    "input_line": "#7A8798",
+}
 
-print("-" * 78)
-print(
-    "%d paires mesurées · %d conformes · %d exemptées · %d échecs"
-    % (len(PAIRES), len(PAIRES) - echecs - exempts, exempts, echecs)
+TINT_BRAND_NU = composer(NAVY["brand"], 0.09, NAVY["paper"])
+TINT_GOLD_NU = composer(NAVY["brand2"], 0.18, NAVY["paper"])
+
+PAIRES_NUIT = [
+    ("texte principal sur papier", NAVY["ink"], NAVY["paper"], 4.5, None),
+    ("texte principal sur blanc", NAVY["ink"], NAVY["surface"], 4.5, None),
+    ("texte secondaire sur papier", NAVY["ink2"], NAVY["paper"], 4.5, None),
+    ("texte atténué sur papier", NAVY["muted"], NAVY["paper"], 4.5, None),
+    ("texte atténué sur gris clair", NAVY["muted"], NAVY["surface2"], 4.5, None),
+    ("lien bleu nuit sur papier", NAVY["brand_ink"], NAVY["paper"], 4.5, None),
+    ("lien bleu nuit sur blanc", NAVY["brand_ink"], NAVY["surface"], 4.5, None),
+    ("bleu nuit sur pastille 9 %", NAVY["brand_ink"], TINT_BRAND_NU, 4.5, None),
+    ("doré sur papier", NAVY["gold_ink"], NAVY["paper"], 4.5, None),
+    ("doré sur pastille or", NAVY["gold_ink"], TINT_GOLD_NU, 4.5, None),
+    ("doré sur gris clair", NAVY["gold_ink"], NAVY["surface2"], 4.5, None),
+    ("blanc sur bouton navy", NAVY["surface"], NAVY["brand"], 4.5, None),
+    ("encre sur bouton doré", NAVY["ink"], NAVY["brand2"], 4.5, None),
+    ("blanc sur noir bleuté", NAVY["surface"], NAVY["ink"], 4.5, None),
+    ("texte 78 % sur noir bleuté", composer("#FFFFFF", 0.78, NAVY["ink"]), NAVY["ink"], 4.5, None),
+    ("texte 62 % sur noir bleuté", composer("#FFFFFF", 0.62, NAVY["ink"]), NAVY["ink"], 4.5, None),
+    ("or sur noir bleuté", NAVY["brand2"], NAVY["ink"], 4.5, None),
+    ("bordure de champ sur papier", NAVY["input_line"], NAVY["paper"], 3.0, None),
+    ("anneau de focus bleu nuit", NAVY["brand_ink"], NAVY["paper"], 3.0, None),
+    ("point de disponibilité or", NAVY["brand2"], NAVY["surface"], 3.0, "décor"),
+    ("monogramme blanc sur or", "#FFFFFF", NAVY["brand2"], 4.5, "logo"),
+]
+
+
+def evaluer(paires, titre):
+    echecs = exempts = 0
+    print("\n%s" % titre)
+    print("%-44s %8s %6s  %s" % ("PAIRE", "RATIO", "SEUIL", "ÉTAT"))
+    print("-" * 78)
+    for libelle, avant, arriere, seuil, exemption in paires:
+        r = ratio(avant, arriere)
+        if exemption:
+            etat = "exempté (%s)" % exemption
+            exempts += 1
+        elif r + 1e-9 >= seuil:
+            etat = "conforme"
+        else:
+            etat = "ÉCHEC"
+            echecs += 1
+        print("%-44s %8.2f %6.1f  %s" % (libelle, r, seuil, etat))
+    print("-" * 78)
+    print(
+        "%d paires · %d conformes · %d exemptées · %d échecs"
+        % (len(paires), len(paires) - echecs - exempts, exempts, echecs)
+    )
+    return echecs
+
+
+total_echecs = evaluer(PAIRES, "THÈME ORANGE (variante actuelle)") + evaluer(
+    PAIRES_NUIT, "THÈME NUIT ET OR (cahier des charges)"
 )
-sys.exit(1 if echecs else 0)
+print("")
+if total_echecs:
+    print("ÉCHEC GLOBAL : %d paire(s) sous le seuil." % total_echecs)
+sys.exit(1 if total_echecs else 0)
