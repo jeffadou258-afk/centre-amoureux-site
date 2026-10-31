@@ -35,7 +35,7 @@
       if (e.key === "Escape") fermer();
     });
     window.addEventListener("resize", function () {
-      if (window.innerWidth > 960) fermer();
+      if (window.innerWidth > 1180) fermer();
     });
   }
 
@@ -101,5 +101,111 @@
   /* ── 5. Année du pied de page ───────────────────────────────────── */
   document.querySelectorAll("[data-annee]").forEach(function (el) {
     el.textContent = String(new Date().getFullYear());
+  });
+})();
+
+/* ── 6. Filtres et recherche (enseignements, médiathèque) ────────── */
+(function () {
+  "use strict";
+
+  var liste = document.querySelector("[data-liste]");
+  if (!liste) return;
+
+  var elements = function () {
+    return Array.prototype.slice.call(liste.querySelectorAll("[data-genre]"));
+  };
+  var boutons = document.querySelectorAll("[data-filtre]");
+  var recherche = document.querySelector("[data-recherche]");
+  var compteur = document.querySelector("[data-compteur]");
+  var aucun = document.querySelector("[data-aucun-resultat]");
+  var courant = "tous";
+
+  var normaliser = function (texte) {
+    return (texte || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
+  var appliquer = function () {
+    var requete = recherche ? normaliser(recherche.value.trim()) : "";
+    var visibles = 0;
+
+    elements().forEach(function (el) {
+      var bonGenre = courant === "tous" || el.dataset.genre === courant;
+      var bonTexte = !requete || normaliser(el.dataset.titre).indexOf(requete) > -1;
+      var visible = bonGenre && bonTexte;
+      el.hidden = !visible;
+      if (visible) visibles += 1;
+    });
+
+    if (compteur) {
+      compteur.textContent = visibles + (visibles > 1 ? " résultats" : " résultat");
+    }
+    if (aucun) aucun.hidden = visibles !== 0;
+  };
+
+  boutons.forEach(function (bouton) {
+    bouton.addEventListener("click", function () {
+      courant = bouton.dataset.filtre;
+      boutons.forEach(function (b) {
+        b.setAttribute("aria-pressed", b === bouton ? "true" : "false");
+      });
+      appliquer();
+    });
+  });
+
+  if (recherche) recherche.addEventListener("input", appliquer);
+
+  /* Une vignette peut être masquée avant même le premier rendu */
+  appliquer();
+})();
+
+/* ── 7. Visionneuse de la médiathèque ────────────────────────────── */
+(function () {
+  "use strict";
+
+  var boite = document.querySelector("[data-visionneuse]");
+  if (!boite || typeof boite.showModal !== "function") return;
+
+  var image = boite.querySelector("[data-visionneuse-image]");
+  var legende = boite.querySelector("[data-visionneuse-legende]");
+
+  document.querySelectorAll("[data-image]").forEach(function (bouton) {
+    bouton.addEventListener("click", function () {
+      image.src = bouton.dataset.image;
+      image.alt = bouton.dataset.legende || "";
+      if (legende) legende.textContent = bouton.dataset.legende || "";
+      boite.showModal();
+    });
+  });
+
+  boite.addEventListener("click", function (e) {
+    if (e.target === boite) boite.close();
+  });
+})();
+
+/* ── 8. Copier le lien d'une prédication ─────────────────────────── */
+(function () {
+  "use strict";
+
+  document.querySelectorAll("[data-copier]").forEach(function (bouton) {
+    bouton.addEventListener("click", function () {
+      var lien = bouton.dataset.copier;
+      var ancien = bouton.textContent;
+      var confirmer = function () {
+        bouton.textContent = "Lien copié";
+        setTimeout(function () {
+          bouton.textContent = ancien;
+        }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lien).then(confirmer, function () {
+          window.prompt("Copiez ce lien :", lien);
+        });
+      } else {
+        window.prompt("Copiez ce lien :", lien);
+      }
+    });
   });
 })();

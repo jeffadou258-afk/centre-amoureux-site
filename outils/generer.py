@@ -3,10 +3,13 @@
 """
 Générateur du site vitrine du CENTRE DES AMOUREUX DE DIEU.
 
-Un seul endroit à modifier pour les informations de l'église : le dictionnaire
-EGLISE ci-dessous. Les valeurs marquées A_COMPLETER sont des textes que
-l'église doit fournir ; le script les enveloppe dans un marqueur visuel
-(<span class="a-completer">) et les liste dans CONTENU-A-COMPLETER.md.
+Structure conforme au cahier des charges (rubriques 3.1 à 3.10) pour la partie
+publique. Les gabarits utilisent string.Template (`$jeton`) et non `%` : un
+style en ligne contenant `border-radius:50%` casse un gabarit formaté par `%`
+(TypeError: not enough arguments for format string) et la ligne signalée est
+celle du gabarit, pas le `%` coupable.
+
+Une seule source de vérité : EGLISE, CRENEAUX, VIDEOS, PROPHETE.
 
 Usage :
     python3 outils/generer.py
@@ -14,71 +17,105 @@ Usage :
 
 import json
 import os
+import re
 import unicodedata
+from string import Template
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ══════════════════════════════════════════════════════════════════════
-# 1. INFORMATIONS DE L'ÉGLISE — la seule source de vérité du site
+# 1. DONNÉES — la seule source de vérité du site
 # ══════════════════════════════════════════════════════════════════════
+
+AC = "A_COMPLETER"
 
 EGLISE = {
     "nom": "Centre des Amoureux de Dieu",
     "nom_maj": "CENTRE DES AMOUREUX DE DIEU",
     "sigle": "CAD",
     "pays": "Côte d'Ivoire",
-    "ville": "A_COMPLETER",           # ex. « Abidjan »
-    "quartier": "A_COMPLETER",        # ex. « Cocody, Angré »
-    "adresse": "A_COMPLETER",         # adresse complète / point de repère
-    "telephone": "A_COMPLETER",       # ex. « +225 07 00 00 00 00 »
-    "whatsapp": "A_COMPLETER",
-    "email": "contact@centre-des-amoureux.org",   # à confirmer
-    "email_marque": False,            # passer à False quand l'adresse est réelle
+    "ville": AC,
+    "quartier": AC,
+    "adresse": AC,
+    "telephone": AC,
+    "whatsapp": AC,
+    "email": "contact@centre-des-amoureux.org",
     "youtube": "https://www.youtube.com/@jeffadou3161",
-    "youtube_nom": "Prophète Daniel Jeff Adou",
-    "facebook": "A_COMPLETER",
-    "tiktok": "A_COMPLETER",
-    "pasteur": "Prophète Daniel Jeff Adou",
-    "annee_fondation": "A_COMPLETER",
-    "site": "https://centre-des-amoureux.org",   # domaine à confirmer
+    "facebook": AC,
+    "instagram": AC,
+    "tiktok": AC,
+    "annee_fondation": AC,
+    "site": "https://centre-des-amoureux.org",
+}
+
+# Décision du client (31/10/2026) : le pasteur du Centre est Daniel Jeff Adou.
+# Le cahier des charges nomme « Issa Kourouma » — erreur du document, signalée
+# et tranchée par le client. Ne pas « corriger » sans nouvelle décision.
+PROPHETE = {
+    "nom": "Prophète Daniel Jeff Adou",
+    "nom_court": "Daniel Jeff Adou",
+    "role": "Prophète et pasteur du Centre des Amoureux de Dieu",
+    "chaine": EGLISE["youtube"],
 }
 
 CRENEAUX = [
-    # (jour, intitulé, heure)  — horaires à confirmer par l'église
-    ("Dimanche", "Culte d'adoration", "A_COMPLETER"),
-    ("Mercredi", "Culte de la Parole", "A_COMPLETER"),
-    ("Vendredi", "Nuit de prière", "A_COMPLETER"),
+    ("Dimanche", "Culte d'adoration", AC),
+    ("Mercredi", "Culte de la Parole", AC),
+    ("Vendredi", "Nuit de prière", AC),
 ]
 
 VIDEOS = [
-    ("SXql767Lo7w", "10 CHOSES A SAVOIR SUR L'ONCTION ROYALE | Prophète Daniel Jeff ADOU", "16 octobre 2026", "Enseignement"),
-    ("2CHnQLRtN0Y", "L'huile, le cœur et le trône", "28 septembre 2026", "Enseignement"),
-    ("OlT6R0wc0JQ", "L'HUILE LE COEUR ET LE TRONE (PARTIE 1)", "22 septembre 2026", "Enseignement"),
-    ("-hKzzUDnh0E", "PRIONS ENSEMBLE", "24 septembre 2026", "Prière"),
-    ("jrefqSertlc", "10 CHOSES A SAVOIR SUR L'ONCTION ROYALE", "12 octobre 2026", "Enseignement"),
-    ("_fldckxVCDI", "Comment reconnaître un sorcier", "12 août 2026", "Enseignement"),
-    ("h8dCZFevdI8", "Service prophétique", "12 août 2026", "Culte"),
-    ("Vke4iYzemIs", "Tous les grands ont d'abord rêvé grand", "17 octobre 2026", "Exhortation"),
+    {"id": "Vke4iYzemIs", "titre": "Tous les grands ont d'abord rêvé grand",
+     "iso": "2026-10-17", "date": "17 octobre 2026", "genre": "Exhortation",
+     "slug": "tous-les-grands-ont-reve-grand"},
+    {"id": "SXql767Lo7w", "titre": "10 CHOSES A SAVOIR SUR L'ONCTION ROYALE",
+     "iso": "2026-10-16", "date": "16 octobre 2026", "genre": "Enseignement",
+     "slug": "onction-royale-10-choses-a-savoir"},
+    {"id": "jrefqSertlc", "titre": "10 CHOSES A SAVOIR SUR L'ONCTION ROYALE",
+     "iso": "2026-10-12", "date": "12 octobre 2026", "genre": "Enseignement",
+     "slug": "onction-royale-10-choses"},
+    {"id": "2CHnQLRtN0Y", "titre": "L'huile, le cœur et le trône",
+     "iso": "2026-09-28", "date": "28 septembre 2026", "genre": "Enseignement",
+     "slug": "huile-coeur-et-trone"},
+    {"id": "-hKzzUDnh0E", "titre": "PRIONS ENSEMBLE",
+     "iso": "2026-09-24", "date": "24 septembre 2026", "genre": "Prière",
+     "slug": "prions-ensemble"},
+    {"id": "OlT6R0wc0JQ", "titre": "L'HUILE LE COEUR ET LE TRONE (PARTIE 1)",
+     "iso": "2026-09-22", "date": "22 septembre 2026", "genre": "Enseignement",
+     "slug": "huile-coeur-et-trone-partie-1"},
+    {"id": "_fldckxVCDI", "titre": "Comment reconnaître un sorcier",
+     "iso": "2026-08-12", "date": "12 août 2026", "genre": "Enseignement",
+     "slug": "reconnaitre-un-sorcier"},
+    {"id": "h8dCZFevdI8", "titre": "Service prophétique",
+     "iso": "2026-08-12", "date": "12 août 2026", "genre": "Culte",
+     "slug": "service-prohetique"},
 ]
+
+GENRES = []
+for _v in VIDEOS:
+    if _v["genre"] not in GENRES:
+        GENRES.append(_v["genre"])
 
 NAV = [
     ("index.html", "Accueil"),
     ("le-centre.html", "Le Centre"),
-    ("cultes.html", "Cultes"),
+    ("le-prophete.html", "Le Prophète"),
+    ("programmes.html", "Programmes"),
     ("enseignements.html", "Enseignements"),
-    ("evenements.html", "Événements"),
+    ("mediatheque.html", "Médiathèque"),
+    ("temoignages.html", "Témoignages"),
     ("priere.html", "Prière"),
-    ("contact.html", "Contact"),
+    ("nous-rejoindre.html", "Nous rejoindre"),
 ]
 
 # ══════════════════════════════════════════════════════════════════════
-# 2. GABARITS
+# 2. OUTILS
 # ══════════════════════════════════════════════════════════════════════
 
 
-def marqueur(valeur, quoi="à confirmer"):
-    """Enveloppe une valeur non encore fournie par l'église."""
-    if valeur == "A_COMPLETER":
+def m(valeur, quoi="à confirmer"):
+    """Marque une information que l'église doit encore fournir."""
+    if valeur == AC:
         return (
             '<span class="a-completer" data-a-completer="1" '
             'title="Information à fournir par le Centre">%s</span>' % quoi
@@ -86,205 +123,22 @@ def marqueur(valeur, quoi="à confirmer"):
     return valeur
 
 
-def m(valeur, quoi="à confirmer"):
-    return marqueur(valeur, quoi)
+def vignette(v):
+    return "assets/img/videos/%s.jpg" % v["id"]
 
 
-NAV_ITEMS = "\n".join(
-    '          <a href="%s"%s>%s</a>'
-    % (href, ' aria-current="page"' if href == "{page}" else "", libelle)
-    for href, libelle in NAV
-)
+def lien_fiche(v, prefixe=""):
+    return "%spredications/%s.html" % (prefixe, v["slug"])
 
 
-def entete_page(page):
-    liens = []
-    for href, libelle in NAV:
-        actif = ' aria-current="page"' if href == page else ""
-        liens.append('          <a href="%s"%s>%s</a>' % (href, actif, libelle))
-    liens.append(
-        '          <a class="btn btn--primary" href="dons.html">Faire un don</a>'
-    )
-    nav_html = "\n".join(liens)
-    return """    <a class="skip" href="#contenu">Aller au contenu</a>
+# ── Composants ────────────────────────────────────────────────────────
 
-    <div class="bandeau-travail" role="note">
-      Version de travail — les informations surlignées doivent être fournies par le Centre.
-    </div>
-
-    <header class="site-header">
-      <div class="wrap">
-        <a class="marque" href="index.html" aria-label="%(nom)s — accueil">
-          <span class="marque__tuile" aria-hidden="true">%(sigle)s</span>
-          <span class="marque__texte">
-            <span class="marque__nom">%(nom)s</span>
-            <span class="marque__sous">%(pays)s</span>
-          </span>
-        </a>
-
-        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-principal">
-          <span class="nav-toggle__barre" aria-hidden="true"></span>
-          <span class="sr-only">Ouvrir le menu</span>
-        </button>
-
-        <nav class="nav" id="nav-principal" data-ouvert="false" aria-label="Navigation principale">
-%(nav)s
-        </nav>
-      </div>
-    </header>
-""" % {"nom": EGLISE["nom"], "sigle": EGLISE["sigle"], "pays": EGLISE["pays"], "nav": nav_html}
-
-
-def pied_page():
-    return """    <footer class="site-footer">
-      <div class="wrap">
-        <div class="footer-grille">
-          <div>
-            <a class="marque" href="index.html">
-              <span class="marque__tuile" aria-hidden="true">%(sigle)s</span>
-              <span class="marque__texte">
-                <span class="marque__nom">%(nom)s</span>
-                <span class="marque__sous">%(pays)s</span>
-              </span>
-            </a>
-            <p class="espace-haut" style="max-width:34ch">
-              Une maison de prière, de Parole et d'amour fraternel, ouverte à tous.
-            </p>
-            <p class="tiny" style="margin-top:18px">
-              <a href="https://www.youtube.com/@jeffadou3161" rel="noopener" target="_blank">
-                Chaîne YouTube du ministère
-              </a>
-            </p>
-          </div>
-          <div>
-            <h3>Le Centre</h3>
-            <ul class="footer-liens">
-              <li><a href="le-centre.html">Qui nous sommes</a></li>
-              <li><a href="le-centre.html#vision">Notre vision</a></li>
-              <li><a href="cultes.html">Nos cultes</a></li>
-              <li><a href="evenements.html">Événements</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3>Ressources</h3>
-            <ul class="footer-liens">
-              <li><a href="enseignements.html">Enseignements</a></li>
-              <li><a href="priere.html">Demande de prière</a></li>
-              <li><a href="dons.html">Faire un don</a></li>
-              <li><a href="contact.html">Nous contacter</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3>Nous trouver</h3>
-            <ul class="footer-liens">
-              <li>Ville : %(ville)s</li>
-              <li>Adresse : %(adresse)s</li>
-              <li>Téléphone : %(telephone)s</li>
-              <li><a href="mailto:%(email)s">%(email)s</a></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="footer-bas">
-          <p class="mb-0">© <span data-annee>2026</span> %(nom)s. Tous droits réservés.</p>
-          <ul>
-            <li><a href="mentions-legales.html">Mentions légales</a></li>
-            <li><a href="mentions-legales.html#donnees">Données personnelles</a></li>
-            <li><a href="contact.html">Contact</a></li>
-          </ul>
-        </div>
-      </div>
-    </footer>
-
-    <script src="assets/js/site.js" defer></script>
-  </body>
-</html>
-""" % {
-        "nom": EGLISE["nom"],
-        "sigle": EGLISE["sigle"],
-        "pays": EGLISE["pays"],
-        "ville": m(EGLISE["ville"]),
-        "adresse": m(EGLISE["adresse"]),
-        "telephone": m(EGLISE["telephone"]),
-        "email": EGLISE["email"],
-    }
-
-
-def page_html(page, titre, description, corps, og_titre=None, index=True):
-    nom_complet = "%s · %s" % (titre, EGLISE["nom"]) if titre != "Accueil" else "%s · %s" % (EGLISE["nom"], "Église à " + EGLISE["pays"])
-    jsonld = {
-        "@context": "https://schema.org",
-        "@type": "Church",
-        "name": EGLISE["nom"],
-        "alternateName": EGLISE["nom_maj"],
-        "description": "Église du Centre des Amoureux de Dieu — cultes, enseignements, prière et vie fraternelle.",
-        "url": EGLISE["site"],
-        "address": {
-            "@type": "PostalAddress",
-            "addressCountry": "CI",
-        },
-        "sameAs": [EGLISE["youtube"]],
-    }
-    robots = "index,follow" if index else "noindex,follow"
-    return """<!doctype html>
-<html lang="fr" data-etat="travail">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>%(titre_complet)s</title>
-    <meta name="description" content="%(description)s">
-    <meta name="robots" content="%(robots)s">
-    <meta name="theme-color" content="#ED6C10">
-    <link rel="canonical" href="%(site)s/%(page)s">
-    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="assets/img/favicon.svg">
-
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="%(nom)s">
-    <meta property="og:locale" content="fr_FR">
-    <meta property="og:title" content="%(og_titre)s">
-    <meta property="og:description" content="%(description)s">
-    <meta property="og:url" content="%(site)s/%(page)s">
-    <meta property="og:image" content="%(site)s/assets/img/partage.png">
-    <meta name="twitter:card" content="summary_large_image">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <script type="application/ld+json">
-%(jsonld)s
-    </script>
-  </head>
-  <body>
-%(entete)s
-%(corps)s
-%(pied)s""" % {
-        "titre_complet": nom_complet,
-        "description": description,
-        "robots": robots,
-        "site": EGLISE["site"],
-        "page": page,
-        "nom": EGLISE["nom"],
-        "og_titre": og_titre or titre,
-        "jsonld": json.dumps(jsonld, ensure_ascii=False, indent=2),
-        "entete": entete_page(page),
-        "corps": corps,
-        "pied": pied_page(),
-    }
-
-
-# ══════════════════════════════════════════════════════════════════════
-# 3. FRAGMENTS RÉUTILISABLES
-# ══════════════════════════════════════════════════════════════════════
-
-
-def carte_video(v, i=0):
-    vid, titre, date, genre = v
-    return """            <article class="video-carte monte">
+T_VIDEO = Template("""            <article class="video-carte monte" data-genre="$genre" data-titre="$titre_attr">
               <div class="video-carte__media">
-                <button class="lecteur" type="button" data-video="%(vid)s" data-titre="%(titre_attr)s"
-                        aria-label="Lire la vidéo : %(titre_attr)s">
+                <button class="lecteur" type="button" data-video="$id" data-titre="$titre_attr"
+                        aria-label="Lire la vidéo : $titre_attr">
+                  <img class="vignette" src="$vignette" alt="" width="1280" height="720" loading="lazy">
+                  <span class="lecteur__voile" aria-hidden="true"></span>
                   <span class="lecteur__badge" aria-hidden="true">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                   </span>
@@ -292,30 +146,52 @@ def carte_video(v, i=0):
                 </button>
               </div>
               <div class="video-carte__corps">
-                <p class="video-carte__meta">%(genre)s · %(date)s</p>
-                <h3 class="video-carte__titre">%(titre)s</h3>
+                <p class="video-carte__meta">$genre · $date</p>
+                <h3 class="video-carte__titre">
+                  <a href="$lien" style="text-decoration:none;color:inherit">$titre</a>
+                </h3>
               </div>
-            </article>""" % {
-        "vid": vid,
-        "titre": titre,
-        "titre_attr": titre.replace('"', "&quot;"),
-        "date": date,
-        "genre": genre,
-    }
+            </article>""")
+
+
+def carte_video(v, prefixe=""):
+    return T_VIDEO.substitute(
+        id=v["id"],
+        titre=v["titre"],
+        titre_attr=v["titre"].replace('"', "&quot;"),
+        date=v["date"],
+        genre=v["genre"],
+        slug=v["slug"],
+        lien=lien_fiche(v, prefixe),
+        vignette=vignette(v),
+    )
+
+
+T_LIGNE_CRENEAU = Template("""          <div class="programme__ligne">
+            <span class="programme__jour">$jour</span>
+            <span class="programme__nom">$intitule</span>
+            <span class="programme__heure">$heure</span>
+          </div>""")
 
 
 def lignes_creneaux():
-    out = []
-    for jour, intitule, heure in CRENEAUX:
-        out.append(
-            """          <div class="programme__ligne">
-            <span class="programme__jour">%(jour)s</span>
-            <span class="programme__nom">%(intitule)s</span>
-            <span class="programme__heure">%(heure)s</span>
-          </div>"""
-            % {"jour": jour, "intitule": intitule, "heure": m(heure, "à confirmer")}
-        )
-    return "\n".join(out)
+    return "\n".join(
+        T_LIGNE_CRENEAU.substitute(jour=j, intitule=i, heure=m(h))
+        for j, i, h in CRENEAUX
+    )
+
+
+T_CARTE_CULTE = Template("""          <aside class="carte-culte monte monte--2" aria-label="Horaires des cultes">
+            <p class="carte-culte__titre">
+              <span class="pastille-vie" aria-hidden="true"></span>
+              Nos rendez-vous
+            </p>
+$lignes
+            <div class="carte-culte__pied">
+              <span>$ville</span>
+              <a class="link-arrow" href="programmes.html">Voir les programmes</a>
+            </div>
+          </aside>""")
 
 
 def carte_culte():
@@ -329,46 +205,230 @@ def carte_culte():
               </span>
               <span class="creneau__heure">%s</span>
             </div>"""
-            % (jour, intitule, m(heure, "à confirmer"))
+            % (jour, intitule, m(heure, "horaire à confirmer"))
         )
-    return """          <aside class="carte-culte monte monte--2" aria-label="Horaires des cultes">
-            <p class="carte-culte__titre">
-              <span class="pastille-vie" aria-hidden="true"></span>
-              Nos rendez-vous
-            </p>
-%s
-            <div class="carte-culte__pied">
-              <span>%s</span>
-              <a class="link-arrow" href="cultes.html">Voir les cultes</a>
-            </div>
-          </aside>""" % ("\n".join(lignes), m(EGLISE["ville"], "à confirmer"))
+    return T_CARTE_CULTE.substitute(
+        lignes="\n".join(lignes), ville=m(EGLISE["ville"], "ville à confirmer")
+    )
 
 
-CTA_FINAL = """      <div class="wrap">
+T_CTA = Template("""      <div class="wrap">
         <div class="cta-final">
           <h2>Vous êtes attendu, tel que vous êtes.</h2>
           <p>
             Que vous veniez pour la première fois ou que vous cherchiez une maison
-            spirituelle, il y a une place pour vous au Centre des Amoureux de Dieu.
+            spirituelle, il y a une place pour vous au $nom.
           </p>
           <div class="cta-final__actions">
-            <a class="btn btn--primary btn--lg" href="cultes.html">Préparer ma visite</a>
-            <a class="btn btn--sur-ink btn--lg" href="priere.html">Demander une prière</a>
+            <a class="btn btn--primary btn--lg" href="${prefixe}nous-rejoindre.html">Préparer ma visite</a>
+            <a class="btn btn--sur-ink btn--lg" href="${prefixe}priere.html">Demander une prière</a>
           </div>
         </div>
-      </div>"""
+      </div>""")
+
+CTA_FINAL = T_CTA.substitute(nom=EGLISE["nom"], prefixe="")
+
+T_FIL = Template("""          <nav class="fil" aria-label="Fil d'Ariane">
+            <a href="${prefixe}index.html">Accueil</a><span aria-hidden="true">/</span><span>$libelle</span>
+          </nav>""")
+
+
+def fil(libelle, prefixe=""):
+    return T_FIL.substitute(prefixe=prefixe, libelle=libelle)
+
+
+def cta_final(prefixe=""):
+    return T_CTA.substitute(nom=EGLISE["nom"], prefixe=prefixe)
+
+
+# ── Gabarit de page ───────────────────────────────────────────────────
+
+T_PAGE = Template("""<!doctype html>
+<html lang="fr" data-etat="travail">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>$titre_complet</title>
+    <meta name="description" content="$description">
+    <meta name="robots" content="$robots">
+    <meta name="theme-color" content="#ED6C10">
+    <link rel="canonical" href="$canonical">
+    <link rel="icon" href="${prefixe}assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="${prefixe}assets/img/favicon.svg">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="$nom">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:title" content="$og_titre">
+    <meta property="og:description" content="$description">
+    <meta property="og:url" content="$canonical">
+    <meta property="og:image" content="$site/assets/img/partage.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${prefixe}assets/css/style.css">
+    <script type="application/ld+json">
+$jsonld
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#contenu">Aller au contenu</a>
+
+    <div class="bandeau-travail" role="note">
+      Version de travail — les informations surlignées doivent être fournies par le Centre.
+    </div>
+
+    <header class="site-header">
+      <div class="wrap">
+        <a class="marque" href="${prefixe}index.html" aria-label="$nom — accueil">
+          <span class="marque__tuile" aria-hidden="true">$sigle</span>
+          <span class="marque__texte">
+            <span class="marque__nom">$nom</span>
+            <span class="marque__sous">$pays</span>
+          </span>
+        </a>
+
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-principal">
+          <span class="nav-toggle__barre" aria-hidden="true"></span>
+          <span class="sr-only">Ouvrir le menu</span>
+        </button>
+
+        <nav class="nav" id="nav-principal" data-ouvert="false" aria-label="Navigation principale">
+$navigation
+        </nav>
+
+        <a class="btn btn--primary nav-cta" href="${prefixe}dons.html">Faire un don</a>
+      </div>
+    </header>
+
+$corps
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grille">
+          <div>
+            <a class="marque" href="${prefixe}index.html">
+              <span class="marque__tuile" aria-hidden="true">$sigle</span>
+              <span class="marque__texte">
+                <span class="marque__nom">$nom</span>
+                <span class="marque__sous">$pays</span>
+              </span>
+            </a>
+            <p class="espace-haut" style="max-width:34ch">
+              Une maison de prière, de Parole et d'amour fraternel, ouverte à tous.
+            </p>
+            <p class="tiny" style="margin-top:18px">
+              <a href="$youtube" rel="noopener" target="_blank">Chaîne YouTube du ministère</a>
+            </p>
+          </div>
+          <div>
+            <h3>Le Centre</h3>
+            <ul class="footer-liens">
+              <li><a href="${prefixe}le-centre.html">Qui nous sommes</a></li>
+              <li><a href="${prefixe}le-prophete.html">Le Prophète</a></li>
+              <li><a href="${prefixe}programmes.html">Nos programmes</a></li>
+              <li><a href="${prefixe}temoignages.html">Témoignages</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Ressources</h3>
+            <ul class="footer-liens">
+              <li><a href="${prefixe}enseignements.html">Enseignements</a></li>
+              <li><a href="${prefixe}mediatheque.html">Médiathèque</a></li>
+              <li><a href="${prefixe}priere.html">Demande de prière</a></li>
+              <li><a href="${prefixe}dons.html">Faire un don</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Nous trouver</h3>
+            <ul class="footer-liens">
+              <li>Ville : $ville</li>
+              <li>Adresse : $adresse</li>
+              <li>Téléphone : $telephone</li>
+              <li><a href="mailto:$email">$email</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bas">
+          <p class="mb-0">© <span data-annee>2026</span> $nom. Tous droits réservés.</p>
+          <ul>
+            <li><a href="${prefixe}mentions-legales.html">Mentions légales</a></li>
+            <li><a href="${prefixe}confidentialite.html">Confidentialité</a></li>
+            <li><a href="${prefixe}nous-rejoindre.html">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+
+    <script src="${prefixe}assets/js/site.js" defer></script>
+  </body>
+</html>
+""")
+
+
+def navigation(page, prefixe=""):
+    liens = []
+    for href, libelle in NAV:
+        actif = ' aria-current="page"' if href == page else ""
+        liens.append('          <a href="%s%s"%s>%s</a>' % (prefixe, href, actif, libelle))
+    liens.append(
+        '          <a class="btn btn--primary nav__don" href="%sdons.html">Faire un don</a>' % prefixe
+    )
+    return "\n".join(liens)
+
+
+def page_html(page, titre, description, corps, index=True, jsonld=None, prefixe=""):
+    nom_complet = (
+        "%s · %s" % (EGLISE["nom"], titre)
+        if titre == "Accueil"
+        else "%s · %s" % (titre, EGLISE["nom"])
+    )
+    if jsonld is None:
+        jsonld = {
+            "@context": "https://schema.org",
+            "@type": "Church",
+            "name": EGLISE["nom"],
+            "alternateName": EGLISE["nom_maj"],
+            "description": "Église du Centre des Amoureux de Dieu — cultes, enseignements, prière et vie fraternelle.",
+            "url": EGLISE["site"],
+            "address": {"@type": "PostalAddress", "addressCountry": "CI"},
+            "sameAs": [EGLISE["youtube"]],
+        }
+    return T_PAGE.substitute(
+        titre_complet=nom_complet,
+        description=description,
+        robots="index,follow" if index else "noindex,follow",
+        canonical=EGLISE["site"] + "/" + ("" if page == "index.html" else page),
+        og_titre=titre,
+        site=EGLISE["site"],
+        nom=EGLISE["nom"],
+        sigle=EGLISE["sigle"],
+        pays=EGLISE["pays"],
+        youtube=EGLISE["youtube"],
+        email=EGLISE["email"],
+        ville=m(EGLISE["ville"]),
+        adresse=m(EGLISE["adresse"]),
+        telephone=m(EGLISE["telephone"]),
+        navigation=navigation(page, prefixe),
+        jsonld=json.dumps(jsonld, ensure_ascii=False, indent=2),
+        corps=corps,
+        prefixe=prefixe,
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════
-# 4. PAGES
+# 3. PAGES
 # ══════════════════════════════════════════════════════════════════════
 
-CORPS_ACCUEIL = """    <main id="contenu">
+CORPS_ACCUEIL = Template("""    <main id="contenu">
       <section class="hero">
         <div class="wrap">
           <div class="hero__grille">
             <div>
-              <p class="eyebrow monte">Église · %(pays)s</p>
+              <p class="eyebrow monte">Église · $pays</p>
               <h1 class="monte monte--2">
                 Un lieu pour <em>aimer Dieu</em>,<br>et être aimé de Lui.
               </h1>
@@ -378,15 +438,15 @@ CORPS_ACCUEIL = """    <main id="contenu">
                 et où chacun est accueilli avec dignité.
               </p>
               <div class="hero__actions monte monte--3">
-                <a class="btn btn--primary btn--lg" href="cultes.html">Venez à un culte</a>
-                <a class="btn btn--ghost btn--lg" href="enseignements.html">Écouter un enseignement</a>
+                <a class="btn btn--primary btn--lg" href="le-centre.html">Découvrir notre ministère</a>
+                <a class="btn btn--ghost btn--lg" href="nous-rejoindre.html">Nous rejoindre</a>
               </div>
               <p class="hero__note monte monte--3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.4-7 10-7 10Z"/></svg>
                 Ouvert à tous, sans condition et sans tenue exigée. Venez comme vous êtes.
               </p>
             </div>
-%(carte_culte)s
+$carte_culte
           </div>
         </div>
       </section>
@@ -451,18 +511,46 @@ CORPS_ACCUEIL = """    <main id="contenu">
         <div class="wrap">
           <div class="section__entete">
             <p class="eyebrow">Enseignements</p>
-            <h2>Les dernières vidéos</h2>
+            <h2>Les dernières prédications</h2>
             <p class="lead">
               Retrouvez les prédications et temps de prière publiés sur la chaîne
               du ministère, à écouter et à partager.
             </p>
           </div>
           <div class="grille grille--3">
-%(videos)s
+$videos
           </div>
           <p class="section__pied">
-            <a class="btn btn--ghost" href="enseignements.html">Tous les enseignements</a>
+            <a class="btn btn--ghost" href="enseignements.html">Toutes les prédications</a>
           </p>
+        </div>
+      </section>
+
+      <section class="section section--alt">
+        <div class="wrap">
+          <div class="grille grille--2" style="align-items:center;gap:clamp(28px,5vw,64px)">
+            <div class="carte" style="text-align:center">
+              <div class="carte__icone" style="margin-inline:auto;width:76px;height:76px;border-radius:50%;background:linear-gradient(145deg,#ED2727,#ED6C10 55%,#EF9C19);color:#fff">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/></svg>
+              </div>
+              <h3 style="margin-bottom:4px">$pasteur</h3>
+              <p class="tiny muted">$role</p>
+              <a class="link-arrow" href="le-prophete.html">Découvrir son ministère</a>
+            </div>
+            <div>
+              <p class="eyebrow">Le Prophète</p>
+              <h2>Une parole portée, pas seulement prononcée.</h2>
+              <p class="lead">
+                Le Centre des Amoureux de Dieu est conduit par le $pasteur, dont
+                l'enseignement est diffusé chaque semaine sur la chaîne du ministère.
+              </p>
+              <p>
+                Sa priorité : une parole compréhensible, fidèle au texte biblique,
+                qui éclaire la vie réelle des personnes.
+              </p>
+              <a class="link-arrow" href="le-prophete.html">Lire sa présentation</a>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -477,6 +565,7 @@ CORPS_ACCUEIL = """    <main id="contenu">
             </p>
             <div class="hero__actions" style="justify-content:center">
               <a class="btn btn--primary btn--lg" href="priere.html">Envoyer une demande</a>
+              <a class="btn btn--sur-ink btn--lg" href="temoignages.html">Partager un témoignage</a>
             </div>
           </div>
         </div>
@@ -484,29 +573,22 @@ CORPS_ACCUEIL = """    <main id="contenu">
 
       <section class="section">
         <div class="wrap">
-%(cta)s
+          $cta
         </div>
       </section>
     </main>
-""" % {
-    "pays": EGLISE["pays"],
-    "carte_culte": carte_culte(),
-    "videos": "\n".join(carte_video(v) for v in VIDEOS[:3]),
-    "cta": CTA_FINAL,
-}
+""")
 
 
-CORPS_CENTRE = """    <main id="contenu">
+CORPS_CENTRE = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Le Centre</span>
-          </nav>
+$fil
           <p class="eyebrow">Qui nous sommes</p>
           <h1>Une église, une famille, une direction.</h1>
           <p class="lead">
             Le Centre des Amoureux de Dieu est une communauté chrétienne établie
-            en %(pays)s. Nous croyons qu'une église est d'abord un lieu où l'on
+            en $pays. Nous croyons qu'une église est d'abord un lieu où l'on
             apprend à aimer Dieu et à aimer les autres.
           </p>
         </div>
@@ -575,32 +657,29 @@ CORPS_CENTRE = """    <main id="contenu">
 
       <section class="section">
         <div class="wrap">
-          <div class="grille grille--2" style="align-items:center;gap:clamp(28px,5vw,64px)">
+          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
             <div>
-              <p class="eyebrow">Le pasteur</p>
-              <h2>%(pasteur)s</h2>
-              <p class="lead">
-                Le Centre des Amoureux de Dieu est conduit par le %(pasteur)s, dont
-                l'enseignement est diffusé sur la chaîne du ministère.
-              </p>
-              <p>
-                Sa priorité : une parole compréhensible, fidèle au texte biblique,
-                qui éclaire la vie réelle des personnes — avec la conviction que ce
-                que Dieu dit change concrètement une existence.
-              </p>
-              <a class="link-arrow" href="%(youtube)s" target="_blank" rel="noopener">
-                Écouter ses enseignements
-              </a>
-            </div>
-            <div class="carte" style="text-align:center">
-              <div class="carte__icone" style="margin-inline:auto;width:76px;height:76px;border-radius:50%%;background:linear-gradient(145deg,#ED2727,#ED6C10 55%%,#EF9C19);color:#fff">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/></svg>
+              <h2>Notre histoire</h2>
+              <div class="etat-vide" style="text-align:left">
+                <p class="mb-0">
+                  L'histoire du Centre, son année de fondation et les étapes de son
+                  développement seront publiées ici dès que la direction les aura
+                  communiquées. Aucun récit n'est inventé : cette page reste vide
+                  plutôt que remplie de faits non vérifiés.
+                </p>
               </div>
-              <h3 style="margin-bottom:4px">%(pasteur)s</h3>
-              <p class="tiny muted">Pasteur du Centre des Amoureux de Dieu</p>
-              <p class="tiny muted mb-0">
-                Photo à venir — une image officielle doit être fournie par le Centre.
-              </p>
+            </div>
+            <div>
+              <h2>Nos responsables</h2>
+              <div class="carte">
+                <h3 style="margin-bottom:4px">$pasteur</h3>
+                <p class="tiny muted">$role</p>
+                <p class="tiny muted mb-0">
+                  La liste des responsables (pasteurs, anciens, responsables de
+                  départements) doit être fournie par le Centre.
+                </p>
+              </div>
+              <a class="link-arrow espace-haut" href="le-prophete.html">Page du Prophète</a>
             </div>
           </div>
         </div>
@@ -615,19 +694,19 @@ CORPS_CENTRE = """    <main id="contenu">
           <div class="grille grille--4">
             <div class="carte">
               <p class="carte__numero">Église</p>
-              <p class="mb-0"><strong>%(nom_maj)s</strong></p>
+              <p class="mb-0"><strong>$nom_maj</strong></p>
             </div>
             <div class="carte">
               <p class="carte__numero">Fondation</p>
-              <p class="mb-0">%(annee)s</p>
+              <p class="mb-0">$annee</p>
             </div>
             <div class="carte">
               <p class="carte__numero">Pays</p>
-              <p class="mb-0">%(pays)s</p>
+              <p class="mb-0">$pays</p>
             </div>
             <div class="carte">
               <p class="carte__numero">Ville</p>
-              <p class="mb-0">%(ville)s</p>
+              <p class="mb-0">$ville</p>
             </div>
           </div>
         </div>
@@ -635,44 +714,156 @@ CORPS_CENTRE = """    <main id="contenu">
 
       <section class="section">
         <div class="wrap">
-%(cta)s
+          $cta
         </div>
       </section>
     </main>
-""" % {
-    "pays": EGLISE["pays"],
-    "pasteur": EGLISE["pasteur"],
-    "youtube": EGLISE["youtube"],
-    "nom_maj": EGLISE["nom_maj"],
-    "annee": m(EGLISE["annee_fondation"], "à confirmer"),
-    "ville": m(EGLISE["ville"], "à confirmer"),
-    "cta": CTA_FINAL,
-}
+""")
 
 
-CORPS_CULTES = """    <main id="contenu">
+CORPS_PROPHETE = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Cultes</span>
-          </nav>
-          <p class="eyebrow">Nos rendez-vous</p>
-          <h1>Venez vivre un culte avec nous.</h1>
-          <p class="lead">
-            Chaque semaine, nous nous rassemblons pour adorer Dieu, écouter sa
-            Parole et prier les uns pour les autres. Voici comment cela se passe.
-          </p>
+$fil
+          <p class="eyebrow">Le Prophète</p>
+          <h1>$pasteur</h1>
+          <p class="lead">$role</p>
         </div>
       </section>
 
       <section class="section">
         <div class="wrap">
+          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px);align-items:start">
+            <div>
+              <h2>Présentation</h2>
+              <p>
+                Le Centre des Amoureux de Dieu est conduit par le $pasteur. Son
+                enseignement est diffusé chaque semaine sur la chaîne du ministère,
+                et porte une conviction simple : la Parole de Dieu éclaire la vie
+                réelle, ici et maintenant.
+              </p>
+              <p>
+                Sa prédication insiste sur l'amour de Dieu, la vie de prière et la
+                transformation du cœur — trois axes que l'on retrouve dans les
+                messages publiés.
+              </p>
+              <div class="etat-vide" style="text-align:left">
+                <h3 style="font-size:1.05rem">Biographie officielle et parcours</h3>
+                <p class="mb-0 tiny">
+                  Les éléments biographiques (date de conversion, parcours
+                  ministériel, ordination, années de service) doivent être fournis
+                  par le Centre. Ils ne sont pas inventés ici : la place est
+                  réservée, le texte viendra du ministère.
+                </p>
+              </div>
+            </div>
+            <div>
+              <div class="carte" style="text-align:center">
+                <div class="carte__icone" style="margin-inline:auto;width:88px;height:88px;border-radius:50%;background:linear-gradient(145deg,#ED2727,#ED6C10 55%,#EF9C19);color:#fff">
+                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/></svg>
+                </div>
+                <h3 style="margin-bottom:4px">$nom_court</h3>
+                <p class="tiny muted">$role</p>
+                <p class="tiny muted mb-0">
+                  Portrait officiel à fournir par le Centre.
+                </p>
+              </div>
+              <a class="btn btn--primary espace-haut" href="$youtube" target="_blank" rel="noopener" style="width:100%">
+                Voir sa chaîne YouTube
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt">
+        <div class="wrap">
+          <div class="section__entete">
+            <p class="eyebrow">Ses messages</p>
+            <h2>Les dernières prédications</h2>
+            <p class="lead">Vidéos publiées sur la chaîne officielle du ministère.</p>
+          </div>
+          <div class="grille grille--3">
+$videos
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="section__entete">
+            <p class="eyebrow">Son ministère</p>
+            <h2>Ce qui caractérise le ministère</h2>
+          </div>
+          <div class="grille grille--3">
+            <article class="carte">
+              <p class="carte__numero">01</p>
+              <h3>L'amour de Dieu</h3>
+              <p class="tiny muted mb-0">Comprendre qu'on est aimé avant d'être méritant.</p>
+            </article>
+            <article class="carte">
+              <p class="carte__numero">02</p>
+              <h3>La vie de prière</h3>
+              <p class="tiny muted mb-0">Prier simplement, avec constance, en toute saison.</p>
+            </article>
+            <article class="carte">
+              <p class="carte__numero">03</p>
+              <h3>La transformation</h3>
+              <p class="tiny muted mb-0">Passer de l'émotion du moment à un changement durable.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt">
+        <div class="wrap">
+          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
+            <div class="etat-vide">
+              <h3>Photographies officielles</h3>
+              <p class="tiny mb-0">
+                Les photos du Prophète et du Centre doivent être fournies en haute
+                définition. Aucune image de substitution n'est utilisée.
+              </p>
+            </div>
+            <div class="etat-vide">
+              <h3>Actualités liées à ses interventions</h3>
+              <p class="tiny mb-0">
+                Les annonces (campagnes, conventions, conférences) seront publiées
+                ici dès qu'elles seront communiquées par le secrétariat.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">$cta</div>
+      </section>
+    </main>
+""")
+
+
+CORPS_PROGRAMMES = Template("""    <main id="contenu">
+      <section class="entete-page">
+        <div class="wrap wrap--narrow">
+$fil
+          <p class="eyebrow">Nos programmes</p>
+          <h1>Venez vivre un culte avec nous.</h1>
+          <p class="lead">
+            Chaque semaine, nous nous rassemblons pour adorer Dieu, écouter sa
+            Parole et prier les uns pour les autres. Voici nos rendez-vous.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="cultes">
+        <div class="wrap">
           <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
-              <p class="eyebrow">Programme hebdomadaire</p>
+              <p class="eyebrow">Cultes réguliers</p>
               <h2>Nos horaires</h2>
               <div class="programme">
-%(creneaux)s
+$creneaux
               </div>
               <p class="tiny muted espace-haut">
                 Les horaires exacts sont communiqués par le secrétariat du Centre.
@@ -683,16 +874,16 @@ CORPS_CULTES = """    <main id="contenu">
               <h2>Le lieu</h2>
               <div class="carte">
                 <p class="carte__numero">Adresse</p>
-                <p><strong>%(adresse)s</strong></p>
-                <p class="mb-0">Ville : <strong>%(ville)s</strong> — %(pays)s</p>
+                <p><strong>$adresse</strong></p>
+                <p class="mb-0">Ville : <strong>$ville</strong> — $pays</p>
                 <p class="tiny muted espace-haut mb-0">
                   Un plan d'accès sera publié dès que l'adresse complète sera fournie.
                 </p>
               </div>
               <div class="carte espace-haut">
                 <p class="carte__numero">Contact</p>
-                <p class="mb-0">Téléphone : <strong>%(telephone)s</strong></p>
-                <p class="mb-0">WhatsApp : <strong>%(whatsapp)s</strong></p>
+                <p class="mb-0">Téléphone : <strong>$telephone</strong></p>
+                <p class="mb-0">WhatsApp : <strong>$whatsapp</strong></p>
               </div>
             </div>
           </div>
@@ -708,23 +899,19 @@ CORPS_CULTES = """    <main id="contenu">
           </div>
           <div class="grille grille--4">
             <article class="carte">
-              <p class="carte__numero">1</p>
-              <h3>Accueil</h3>
+              <p class="carte__numero">1</p><h3>Accueil</h3>
               <p class="tiny muted mb-0">Vous êtes reçu à l'entrée et orienté vers une place.</p>
             </article>
             <article class="carte">
-              <p class="carte__numero">2</p>
-              <h3>Louange</h3>
+              <p class="carte__numero">2</p><h3>Louange</h3>
               <p class="tiny muted mb-0">Un temps de chants et d'adoration, ouvert à tous.</p>
             </article>
             <article class="carte">
-              <p class="carte__numero">3</p>
-              <h3>Parole</h3>
+              <p class="carte__numero">3</p><h3>Parole</h3>
               <p class="tiny muted mb-0">L'enseignement du message, avec des notes si vous le souhaitez.</p>
             </article>
             <article class="carte">
-              <p class="carte__numero">4</p>
-              <h3>Prière</h3>
+              <p class="carte__numero">4</p><h3>Prière</h3>
               <p class="tiny muted mb-0">Un temps de prière personnel pour ceux qui le désirent.</p>
             </article>
           </div>
@@ -732,6 +919,54 @@ CORPS_CULTES = """    <main id="contenu">
       </section>
 
       <section class="section">
+        <div class="wrap">
+          <div class="section__entete">
+            <p class="eyebrow">Temps forts</p>
+            <h2>Programmes spéciaux et événements</h2>
+            <p class="lead">
+              Veillées, séminaires, conférences, campagnes spirituelles : chaque
+              événement aura sa fiche — titre, description, image, date, heure,
+              lieu, informations pratiques, inscription si nécessaire.
+            </p>
+          </div>
+          <div class="agenda">
+            <div class="agenda__item">
+              <span class="agenda__quand">Chaque mois</span>
+              <div>
+                <strong>Veillée de prière</strong>
+                <p class="tiny muted mb-0">Date et thème communiqués par le secrétariat.</p>
+              </div>
+              <span class="tiny message">$aConfirmer</span>
+            </div>
+            <div class="agenda__item">
+              <span class="agenda__quand">Périodique</span>
+              <div>
+                <strong>Séminaires et enseignements thématiques</strong>
+                <p class="tiny muted mb-0">Programme détaillé à publier.</p>
+              </div>
+              <span class="tiny">$aConfirmer</span>
+            </div>
+            <div class="agenda__item">
+              <span class="agenda__quand">Annuel</span>
+              <div>
+                <strong>Convention / campagne spirituelle</strong>
+                <p class="tiny muted mb-0">Annonce officielle à venir.</p>
+              </div>
+              <span class="tiny">$aConfirmer</span>
+            </div>
+          </div>
+
+          <div class="etat-vide espace-haut">
+            <h3>Le calendrier détaillé</h3>
+            <p class="tiny mb-0">
+              Aucun événement daté n'est publié pour l'instant : le calendrier sera
+              rempli dès réception des dates officielles. Aucune date n'est inventée.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt">
         <div class="wrap">
           <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
             <div class="carte">
@@ -744,44 +979,29 @@ CORPS_CULTES = """    <main id="contenu">
               </ul>
             </div>
             <div class="carte">
-              <h2 style="font-size:1.6rem">Besoin d'un accompagnement ?</h2>
-              <p>
-                Une visite, une écoute, une prière pour un sujet précis : l'équipe
-                pastorale peut vous recevoir.
-              </p>
-              <a class="btn btn--primary" href="contact.html">Prendre contact</a>
+              <h2 style="font-size:1.6rem">Vous souhaitez visiter le Centre ?</h2>
+              <p>Signalez votre venue : l'équipe vous accueillera et vous guidera.</p>
+              <a class="btn btn--primary" href="nous-rejoindre.html#visite">Je souhaite visiter</a>
             </div>
           </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="wrap">
-%(cta)s
-        </div>
+        <div class="wrap">$cta</div>
       </section>
     </main>
-""" % {
-    "creneaux": lignes_creneaux(),
-    "adresse": m(EGLISE["adresse"], "à confirmer"),
-    "ville": m(EGLISE["ville"], "à confirmer"),
-    "pays": EGLISE["pays"],
-    "telephone": m(EGLISE["telephone"], "à confirmer"),
-    "whatsapp": m(EGLISE["whatsapp"], "à confirmer"),
-    "cta": CTA_FINAL,
-}
+""")
 
 
-CORPS_ENSEIGNEMENTS = """    <main id="contenu">
+CORPS_ENSEIGNEMENTS = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Enseignements</span>
-          </nav>
-          <p class="eyebrow">La Parole enseignée</p>
+$fil
+          <p class="eyebrow">Prédications et enseignements</p>
           <h1>Écouter, comprendre, mettre en pratique.</h1>
           <p class="lead">
-            Les messages et temps de prière publiés sur la chaîne du ministère.
+            La bibliothèque des messages publiés sur la chaîne du ministère.
             Chaque vidéo se lance uniquement si vous cliquez : aucun cookie n'est
             déposé avant votre accord.
           </p>
@@ -790,11 +1010,25 @@ CORPS_ENSEIGNEMENTS = """    <main id="contenu">
 
       <section class="section">
         <div class="wrap">
-          <div class="grille grille--3">
-%(videos)s
+          <div class="filtres" role="search">
+            <label class="sr-only" for="recherche">Rechercher une prédication</label>
+            <input id="recherche" type="search" placeholder="Rechercher un titre…" data-recherche>
+            <button class="puce" type="button" data-filtre="tous" aria-pressed="true">Tout</button>
+$puces
+            <span class="compteur-resultats" data-compteur>$total messages</span>
           </div>
+
+          <div class="grille grille--3" data-liste>
+$videos
+          </div>
+
+          <div class="etat-vide espace-haut" data-aucun-resultat hidden>
+            <h3>Aucun message ne correspond</h3>
+            <p class="tiny mb-0">Essayez un autre mot-clé ou revenez à « Tout ».</p>
+          </div>
+
           <p class="section__pied">
-            <a class="btn btn--primary" href="%(youtube)s" target="_blank" rel="noopener">
+            <a class="btn btn--primary" href="$youtube" target="_blank" rel="noopener">
               Voir toute la chaîne YouTube
             </a>
           </p>
@@ -825,125 +1059,190 @@ CORPS_ENSEIGNEMENTS = """    <main id="contenu">
       </section>
 
       <section class="section">
-        <div class="wrap">
-%(cta)s
-        </div>
+        <div class="wrap">$cta</div>
       </section>
     </main>
-""" % {
-    "videos": "\n".join(carte_video(v) for v in VIDEOS),
-    "youtube": EGLISE["youtube"],
-    "cta": CTA_FINAL,
-}
+""")
 
 
-CORPS_EVENEMENTS = """    <main id="contenu">
+CORPS_MEDIATHEQUE = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Événements</span>
-          </nav>
-          <p class="eyebrow">Vie de l'église</p>
-          <h1>Les prochains rendez-vous.</h1>
+$fil
+          <p class="eyebrow">Médiathèque</p>
+          <h1>Les images du ministère.</h1>
           <p class="lead">
-            Retraites, veillées, conventions, actions sociales : les temps forts
-            du Centre des Amoureux de Dieu sont annoncés ici.
+            Les visuels ci-dessous proviennent des vidéos officielles de la chaîne
+            du ministère. Les photographies du Centre, des cultes et des événements
+            seront ajoutées dès qu'elles seront fournies.
           </p>
         </div>
       </section>
 
       <section class="section">
         <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">À venir</p>
-            <h2>Calendrier</h2>
+          <div class="filtres">
+            <button class="puce" type="button" data-filtre="tous" aria-pressed="true">Tout</button>
+$puces
+            <span class="compteur-resultats" data-compteur>$total visuels</span>
           </div>
-          <div class="grille grille--2">
-            <article class="carte">
-              <p class="carte__numero">Dimanche — chaque semaine</p>
-              <h3>Culte d'adoration</h3>
-              <p class="muted mb-0">
-                Rendez-vous hebdomadaire de l'assemblée. Horaire :
-                %(heure1)s.
-              </p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">Mercredi — chaque semaine</p>
-              <h3>Culte de la Parole</h3>
-              <p class="muted mb-0">
-                Enseignement au milieu de la semaine. Horaire :
-                %(heure2)s.
-              </p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">Vendredi — chaque semaine</p>
-              <h3>Nuit de prière</h3>
-              <p class="muted mb-0">
-                Temps d'intercession. Horaire : %(heure3)s.
-              </p>
-            </article>
-            <article class="carte" style="border-style:dashed">
-              <p class="carte__numero">Temps forts</p>
-              <h3>Les événements ponctuels</h3>
-              <p class="muted mb-0">
-                Le calendrier des événements exceptionnels sera publié ici dès
-                qu'il sera communiqué par le secrétariat.
-              </p>
-            </article>
+
+          <div class="galerie" data-liste>
+$galerie
+          </div>
+
+          <div class="etat-vide espace-haut">
+            <h3>Albums photographiques à venir</h3>
+            <p class="tiny mb-0">
+              Cultes, séminaires, conférences, veillées, actions sociales : chaque
+              album sera publié après l'accord des personnes photographiées.
+            </p>
           </div>
         </div>
       </section>
 
       <section class="section section--alt">
         <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:center">
-            <div>
-              <p class="eyebrow">Ne rien manquer</p>
-              <h2>Rester informé</h2>
-              <p class="lead">
-                Les annonces de dernière minute sont diffusées sur la chaîne du
-                ministère. Les réseaux sociaux du Centre seront ajoutés ici.
-              </p>
-              <a class="btn btn--primary" href="%(youtube)s" target="_blank" rel="noopener">
-                Suivre sur YouTube
-              </a>
-            </div>
-            <div class="carte">
-              <h3>Suivez-nous</h3>
-              <p class="tiny muted">Facebook : %(facebook)s</p>
-              <p class="tiny muted mb-0">TikTok : %(tiktok)s</p>
-            </div>
+          <div class="section__entete section__entete--centre">
+            <h2>Chaque image a une origine vérifiable</h2>
+            <p class="lead">
+              Aucune photographie de substitution n'est utilisée sur ce site. Une
+              image affichée ici provient soit d'une vidéo du ministère, soit d'un
+              fichier fourni par le Centre.
+            </p>
           </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="wrap">
-%(cta)s
-        </div>
+        <div class="wrap">$cta</div>
       </section>
     </main>
-""" % {
-    "heure1": m(CRENEAUX[0][2], "à confirmer"),
-    "heure2": m(CRENEAUX[1][2], "à confirmer"),
-    "heure3": m(CRENEAUX[2][2], "à confirmer"),
-    "youtube": EGLISE["youtube"],
-    "facebook": m(EGLISE["facebook"], "à confirmer"),
-    "tiktok": m(EGLISE["tiktok"], "à confirmer"),
-    "cta": CTA_FINAL,
-}
+
+    <dialog class="visionneuse" data-visionneuse aria-label="Image agrandie">
+      <img src="" alt="" data-visionneuse-image>
+      <form method="dialog">
+        <span data-visionneuse-legende></span>
+        <button type="submit">Fermer</button>
+      </form>
+    </dialog>
+""")
 
 
-CORPS_PRIERE = """    <main id="contenu">
+CORPS_TEMOIGNAGES = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Prière</span>
-          </nav>
-          <p class="eyebrow">Prière</p>
+$fil
+          <p class="eyebrow">Témoignages</p>
+          <h1>Ce que Dieu a fait mérite d'être raconté.</h1>
+          <p class="lead">
+            Guérison, délivrance, provision, restauration familiale : partagez ce
+            que vous avez vécu. Chaque témoignage est lu, vérifié, puis validé par
+            l'équipe avant publication.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
+            <div>
+              <h2>Partager mon témoignage</h2>
+              <form class="formulaire" data-mailto="$email" data-sujet="Témoignage — site du Centre">
+                <div class="champ--duo">
+                  <div class="champ">
+                    <label for="t-nom">Nom ou pseudonyme</label>
+                    <input id="t-nom" name="nom" type="text" required>
+                  </div>
+                  <div class="champ">
+                    <label for="t-titre">Titre du témoignage</label>
+                    <input id="t-titre" name="titre" type="text" required>
+                  </div>
+                </div>
+                <div class="champ">
+                  <label for="t-texte">Votre témoignage</label>
+                  <textarea id="t-texte" name="temoignage" required minlength="40"></textarea>
+                  <span class="aide">Racontez ce qui s'est passé, et ce que cela a changé pour vous.</span>
+                </div>
+                <div class="champ">
+                  <label for="t-identite">Identité affichée</label>
+                  <select id="t-identite" name="identite">
+                    <option>Afficher mon nom</option>
+                    <option>Afficher uniquement mon prénom</option>
+                    <option>Rester anonyme</option>
+                  </select>
+                </div>
+                <div class="champ">
+                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
+                    <input type="checkbox" name="autorisation" required style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
+                    <span class="tiny">J'autorise la publication de mon témoignage après validation par l'équipe du Centre.</span>
+                  </label>
+                </div>
+                <div class="champ">
+                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
+                    <input type="checkbox" name="photo" style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
+                    <span class="tiny">Je souhaite joindre une photo (à ajouter en pièce jointe dans votre messagerie).</span>
+                  </label>
+                </div>
+                <button class="btn btn--primary btn--lg" type="submit">Préparer mon message</button>
+                <p class="note-formulaire" data-avis hidden role="status"></p>
+                <p class="note-formulaire">
+                  Aucun témoignage n'est publié automatiquement : le site ne fait
+                  que préparer votre message.
+                </p>
+              </form>
+            </div>
+            <div>
+              <div class="carte">
+                <h3>Comment ça se passe</h3>
+                <ol class="liste-propre mb-0">
+                  <li>Vous envoyez votre message.</li>
+                  <li>L'équipe le lit et vous contacte si besoin.</li>
+                  <li>Après accord, il est publié sur cette page.</li>
+                </ol>
+              </div>
+              <div class="encart encart--or espace-haut">
+                <p class="verse">
+                  « Revenez à votre maison, et racontez tout ce que Dieu a fait pour vous. »
+                  <cite>Luc 8 : 39</cite>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt">
+        <div class="wrap">
+          <div class="section__entete">
+            <p class="eyebrow">Ils ont témoigné</p>
+            <h2>Témoignages publiés</h2>
+          </div>
+          <div class="etat-vide">
+            <h3>Aucun témoignage publié pour l'instant</h3>
+            <p class="tiny mb-0">
+              Les témoignages validés apparaîtront ici, avec l'identité choisie par
+              chacun. Rien n'est publié sans accord explicite.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">$cta</div>
+      </section>
+    </main>
+""")
+
+
+CORPS_PRIERE = Template("""    <main id="contenu">
+      <section class="entete-page">
+        <div class="wrap wrap--narrow">
+$fil
+          <p class="eyebrow">Demande de prière</p>
           <h1>Déposez ce qui pèse sur votre cœur.</h1>
           <p class="lead">
-            Santé, famille, travail, direction de vie, action de grâce : écrivez-nous.
+            Santé, famille, travail, mariage, études, finances : écrivez-nous.
             Une personne de l'équipe pastorale priera pour votre intention.
           </p>
         </div>
@@ -954,30 +1253,42 @@ CORPS_PRIERE = """    <main id="contenu">
           <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
               <h2>Écrire une demande</h2>
-              <form class="formulaire" data-mailto="%(email)s" data-sujet="Demande de prière — site du Centre">
+              <form class="formulaire" data-mailto="$email" data-sujet="Demande de prière — site du Centre">
                 <div class="champ--duo">
                   <div class="champ">
-                    <label for="prenom">Prénom</label>
-                    <input id="prenom" name="prenom" type="text" autocomplete="given-name" required>
+                    <label for="p-nom">Nom ou pseudonyme</label>
+                    <input id="p-nom" name="nom" type="text" required>
                   </div>
                   <div class="champ">
-                    <label for="contact">Téléphone ou e-mail <span class="aide">(facultatif)</span></label>
-                    <input id="contact" name="contact" type="text" autocomplete="email">
+                    <label for="p-contact">E-mail ou téléphone <span class="aide">(facultatif)</span></label>
+                    <input id="p-contact" name="contact" type="text">
                   </div>
                 </div>
                 <div class="champ">
-                  <label for="sujet">Sujet de prière</label>
-                  <input id="sujet" name="sujet" type="text" placeholder="En quelques mots" required>
+                  <label for="p-categorie">Catégorie</label>
+                  <select id="p-categorie" name="categorie">
+                    <option>Famille</option>
+                    <option>Santé</option>
+                    <option>Travail</option>
+                    <option>Mariage</option>
+                    <option>Études et concours</option>
+                    <option>Finances</option>
+                    <option>Vie spirituelle</option>
+                    <option>Autre situation</option>
+                  </select>
                 </div>
                 <div class="champ">
-                  <label for="message">Votre message</label>
-                  <textarea id="message" name="message" required></textarea>
-                  <span class="aide">Vous pouvez écrire librement. Rien n'est publié.</span>
+                  <label for="p-sujet">Sujet de prière</label>
+                  <input id="p-sujet" name="sujet" type="text" placeholder="En quelques mots" required>
                 </div>
                 <div class="champ">
-                  <label for="confidentialite">Confidentialité</label>
-                  <select id="confidentialite" name="confidentialite">
-                    <option>Demande confidentielle (équipe pastorale uniquement)</option>
+                  <label for="p-message">Votre demande</label>
+                  <textarea id="p-message" name="message" required></textarea>
+                </div>
+                <div class="champ">
+                  <label for="p-confidentialite">Confidentialité</label>
+                  <select id="p-confidentialite" name="confidentialite">
+                    <option>Strictement confidentielle (équipe pastorale uniquement)</option>
                     <option>Peut être partagée en réunion de prière, sans mon nom</option>
                   </select>
                 </div>
@@ -1000,8 +1311,9 @@ CORPS_PRIERE = """    <main id="contenu">
                 <h3>Ce que devient votre demande</h3>
                 <ul class="liste-propre mb-0">
                   <li>Elle est lue par une personne de l'équipe pastorale.</li>
-                  <li>Elle n'est ni publiée, ni partagée sans votre accord.</li>
-                  <li>Vous pouvez demander qu'elle soit supprimée à tout moment.</li>
+                  <li>Elle n'est jamais publiée ni rendue publique.</li>
+                  <li>Elle n'est pas partagée sans votre accord.</li>
+                  <li>Vous pouvez demander sa suppression à tout moment.</li>
                 </ul>
               </div>
               <div class="encart encart--or espace-haut">
@@ -1028,20 +1340,18 @@ CORPS_PRIERE = """    <main id="contenu">
         </div>
       </section>
     </main>
-""" % {"email": EGLISE["email"]}
+""")
 
 
-CORPS_CONTACT = """    <main id="contenu">
+CORPS_REJOINDRE = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Contact</span>
-          </nav>
-          <p class="eyebrow">Contact</p>
-          <h1>Parlons-nous.</h1>
+$fil
+          <p class="eyebrow">Nous rejoindre</p>
+          <h1>Venir au Centre.</h1>
           <p class="lead">
-            Une question sur les cultes, une demande de visite, un besoin
-            d'accompagnement : écrivez-nous ou appelez le secrétariat.
+            Adresse, horaires, contacts et itinéraire : tout ce qu'il faut pour
+            préparer votre première visite.
           </p>
         </div>
       </section>
@@ -1050,45 +1360,92 @@ CORPS_CONTACT = """    <main id="contenu">
         <div class="wrap">
           <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
-              <h2>Nous joindre</h2>
-              <div class="grille" style="gap:14px">
-                <div class="carte">
-                  <p class="carte__numero">Adresse</p>
-                  <p class="mb-0"><strong>%(adresse)s</strong></p>
-                  <p class="mb-0">Ville : %(ville)s — %(pays)s</p>
-                </div>
-                <div class="carte">
-                  <p class="carte__numero">Téléphone / WhatsApp</p>
-                  <p class="mb-0"><strong>%(telephone)s</strong></p>
-                  <p class="mb-0">WhatsApp : <strong>%(whatsapp)s</strong></p>
-                </div>
-                <div class="carte">
-                  <p class="carte__numero">E-mail</p>
-                  <p class="mb-0"><strong><a href="mailto:%(email)s">%(email)s</a></strong></p>
-                  <p class="tiny muted mb-0">Adresse provisoire, à confirmer par le Centre.</p>
-                </div>
+              <h2>Nous trouver</h2>
+              <div class="carte">
+                <p class="carte__numero">Adresse officielle</p>
+                <p><strong>$adresse</strong></p>
+                <p class="mb-0">Quartier : <strong>$quartier</strong></p>
+                <p class="mb-0">Ville : <strong>$ville</strong> — $pays</p>
+              </div>
+              <div class="carte espace-haut">
+                <p class="carte__numero">Contact</p>
+                <p class="mb-0">Téléphone : <strong>$telephone</strong></p>
+                <p class="mb-0">WhatsApp : <strong>$whatsapp</strong></p>
+                <p class="mb-0">E-mail : <strong><a href="mailto:$email">$email</a></strong></p>
+                <p class="tiny muted espace-haut mb-0">
+                  L'adresse e-mail est provisoire et sera remplacée par l'adresse officielle.
+                </p>
+              </div>
+              <div class="etat-vide espace-haut">
+                <h3>Plan d'accès et itinéraire</h3>
+                <p class="tiny mb-0">
+                  La carte interactive sera intégrée dès que l'adresse exacte sera
+                  fournie par le secrétariat.
+                </p>
               </div>
             </div>
+
+            <div>
+              <h2>Horaires des cultes</h2>
+              <div class="programme">
+$creneaux
+              </div>
+
+              <div class="carte espace-haut" id="visite">
+                <h3>Je souhaite visiter le Centre</h3>
+                <p class="tiny muted">
+                  Laissez vos coordonnées : l'équipe vous accueillera et vous
+                  indiquera le lieu exact et l'heure.
+                </p>
+                <form class="formulaire" data-mailto="$email" data-sujet="Je souhaite visiter le Centre">
+                  <div class="champ">
+                    <label for="v-nom">Nom</label>
+                    <input id="v-nom" name="nom" type="text" required>
+                  </div>
+                  <div class="champ">
+                    <label for="v-tel">Téléphone ou WhatsApp</label>
+                    <input id="v-tel" name="telephone" type="tel" required>
+                  </div>
+                  <div class="champ">
+                    <label for="v-date">Date envisagée <span class="aide">(facultatif)</span></label>
+                    <input id="v-date" name="date" type="date">
+                  </div>
+                  <div class="champ">
+                    <label for="v-nb">Nombre de personnes</label>
+                    <input id="v-nb" name="personnes" type="number" min="1" value="1">
+                  </div>
+                  <button class="btn btn--primary" type="submit">Préparer ma demande</button>
+                  <p class="note-formulaire" data-avis hidden role="status"></p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt">
+        <div class="wrap">
+          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
               <h2>Écrire un message</h2>
-              <form class="formulaire" data-mailto="%(email)s" data-sujet="Message depuis le site du Centre">
+              <form class="formulaire" data-mailto="$email" data-sujet="Message depuis le site du Centre">
                 <div class="champ--duo">
                   <div class="champ">
-                    <label for="nom">Nom</label>
-                    <input id="nom" name="nom" type="text" autocomplete="name" required>
+                    <label for="c-nom">Nom</label>
+                    <input id="c-nom" name="nom" type="text" autocomplete="name" required>
                   </div>
                   <div class="champ">
-                    <label for="tel">Téléphone</label>
-                    <input id="tel" name="tel" type="tel" autocomplete="tel">
+                    <label for="c-tel">Téléphone</label>
+                    <input id="c-tel" name="tel" type="tel" autocomplete="tel">
                   </div>
                 </div>
                 <div class="champ">
-                  <label for="email-exp">E-mail</label>
-                  <input id="email-exp" name="email" type="email" autocomplete="email" required>
+                  <label for="c-email">E-mail</label>
+                  <input id="c-email" name="email" type="email" autocomplete="email" required>
                 </div>
                 <div class="champ">
-                  <label for="objet">Objet</label>
-                  <select id="objet" name="objet">
+                  <label for="c-objet">Objet</label>
+                  <select id="c-objet" name="objet">
                     <option>Question sur les cultes</option>
                     <option>Demande de visite</option>
                     <option>Accompagnement pastoral</option>
@@ -1097,51 +1454,45 @@ CORPS_CONTACT = """    <main id="contenu">
                   </select>
                 </div>
                 <div class="champ">
-                  <label for="msg">Message</label>
-                  <textarea id="msg" name="message" required></textarea>
+                  <label for="c-msg">Message</label>
+                  <textarea id="c-msg" name="message" required></textarea>
                 </div>
                 <button class="btn btn--primary btn--lg" type="submit">Préparer mon message</button>
                 <p class="note-formulaire" data-avis hidden role="status"></p>
               </form>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="section__entete section__entete--centre">
-            <h2>Venir au Centre</h2>
-            <p class="lead">
-              Un plan d'accès interactif sera intégré dès que l'adresse exacte
-              sera communiquée.
-            </p>
+            <div>
+              <div class="carte">
+                <h3>Nous écrire sur les réseaux</h3>
+                <p class="tiny muted mb-0">Facebook : $facebook</p>
+                <p class="tiny muted mb-0">Instagram : $instagram</p>
+                <p class="tiny muted mb-0">TikTok : $tiktok</p>
+                <p class="tiny muted mb-0">YouTube : <a href="$youtube" target="_blank" rel="noopener">chaîne du ministère</a></p>
+              </div>
+              <div class="encart encart--or espace-haut">
+                <p class="verse">
+                  « Car là où deux ou trois sont assemblés en mon nom, je suis au
+                  milieu d'eux. »
+                  <cite>Matthieu 18 : 20</cite>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
-""" % {
-    "adresse": m(EGLISE["adresse"], "à confirmer"),
-    "ville": m(EGLISE["ville"], "à confirmer"),
-    "pays": EGLISE["pays"],
-    "telephone": m(EGLISE["telephone"], "à confirmer"),
-    "whatsapp": m(EGLISE["whatsapp"], "à confirmer"),
-    "email": EGLISE["email"],
-}
+""")
 
 
-CORPS_DONS = """    <main id="contenu">
+CORPS_DONS = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Faire un don</span>
-          </nav>
+$fil
           <p class="eyebrow">Soutenir l'œuvre</p>
           <h1>Donner, c'est participer.</h1>
           <p class="lead">
             Vos dons soutiennent les cultes, les actions sociales et
-            l'accompagnement des personnes. Chaque contribution, quelle que soit
-            sa taille, a un usage concret.
+            l'accompagnement des personnes. Chaque contribution a un usage concret.
           </p>
         </div>
       </section>
@@ -1155,7 +1506,7 @@ CORPS_DONS = """    <main id="contenu">
               </div>
               <h3>Mobile Money</h3>
               <p class="tiny muted">Le numéro marchand du Centre sera publié ici.</p>
-              <p class="tiny mb-0"><strong>%(mm)s</strong></p>
+              <p class="tiny mb-0"><strong>$mobilemoney</strong></p>
             </article>
             <article class="carte">
               <div class="carte__icone carte__icone--or" aria-hidden="true">
@@ -1163,7 +1514,7 @@ CORPS_DONS = """    <main id="contenu">
               </div>
               <h3>Virement bancaire</h3>
               <p class="tiny muted">Les coordonnées bancaires officielles seront ajoutées.</p>
-              <p class="tiny mb-0"><strong>%(iban)s</strong></p>
+              <p class="tiny mb-0"><strong>$iban</strong></p>
             </article>
             <article class="carte">
               <div class="carte__icone" aria-hidden="true">
@@ -1184,10 +1535,15 @@ CORPS_DONS = """    <main id="contenu">
             </ul>
           </div>
 
-          <p class="note-formulaire espace-haut">
-            Aucun paiement en ligne n'est encaissé par ce site : il n'enregistre
-            aucune donnée bancaire.
-          </p>
+          <div class="etat-vide espace-haut">
+            <h3>Le paiement en ligne n'est pas encore activé</h3>
+            <p class="tiny mb-0">
+              Un paiement Mobile Money en ligne exige un compte marchand auprès d'un
+              prestataire agréé et une vérification de la transaction côté serveur.
+              Tant que ce dispositif n'est pas en place, ce site n'encaisse rien et
+              n'enregistre aucune donnée bancaire.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -1207,27 +1563,106 @@ CORPS_DONS = """    <main id="contenu">
                 Pour un reçu, un don affecté à un projet ou une précision sur les
                 moyens de paiement, contactez le secrétariat.
               </p>
-              <a class="btn btn--ghost" href="contact.html">Contacter le secrétariat</a>
+              <a class="btn btn--ghost" href="nous-rejoindre.html">Contacter le secrétariat</a>
             </div>
           </div>
         </div>
       </section>
     </main>
-""" % {
-    "mm": m("A_COMPLETER", "à confirmer"),
-    "iban": m("A_COMPLETER", "à confirmer"),
-}
+""")
 
 
-CORPS_LEGAL = """    <main id="contenu">
+CORPS_CONFIDENTIALITE = Template("""    <main id="contenu">
       <section class="entete-page">
         <div class="wrap wrap--narrow">
-          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Mentions légales</span>
-          </nav>
+$fil
+          <p class="eyebrow">Données personnelles</p>
+          <h1>Politique de confidentialité</h1>
+          <p class="lead">Dernière mise à jour : 31 octobre 2026.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap wrap--narrow">
+          <h2>1. Responsable du traitement</h2>
+          <p>
+            <strong>$nom_maj</strong> — $adresse, $ville ($pays).
+            Contact : <a href="mailto:$email">$email</a>.
+          </p>
+
+          <h2>2. Ce que ce site collecte</h2>
+          <p>
+            Ce site est un site de présentation. Il ne crée aucun compte, ne dépose
+            aucun cookie de mesure d'audience et n'enregistre aucune donnée dans une
+            base de données.
+          </p>
+          <ul class="liste-propre">
+            <li>
+              <strong>Formulaires.</strong> Les informations saisies (nom, contact,
+              sujet, message) ne sont pas transmises à un serveur : elles servent à
+              composer un message dans votre propre logiciel de messagerie. Vous
+              décidez de l'envoyer.
+            </li>
+            <li>
+              <strong>Demandes de prière.</strong> Une fois reçues par courriel,
+              elles sont traitées de manière confidentielle, ne sont jamais publiées
+              et ne servent à aucune fin publicitaire.
+            </li>
+            <li>
+              <strong>Témoignages.</strong> Aucun témoignage n'est publié sans
+              autorisation explicite et sans validation préalable.
+            </li>
+            <li>
+              <strong>Polices de caractères.</strong> Le site charge des polices
+              depuis Google Fonts : votre adresse IP est alors transmise à ce
+              service. Un hébergement local des polices peut supprimer cet appel.
+            </li>
+            <li>
+              <strong>Vidéos.</strong> Les lecteurs YouTube ne sont chargés qu'après
+              un clic. Avant ce clic, aucune requête n'est faite vers YouTube.
+            </li>
+          </ul>
+
+          <h2>3. Durées de conservation</h2>
+          <p>
+            Les demandes de prière et les messages reçus par courriel sont conservés
+            le temps du suivi pastoral, puis supprimés sur demande. Les témoignages
+            refusés ne sont pas conservés.
+          </p>
+
+          <h2>4. Vos droits</h2>
+          <p>
+            Vous pouvez demander l'accès, la rectification ou la suppression des
+            informations vous concernant en écrivant à
+            <a href="mailto:$email">$email</a>. Une réponse est apportée dans les
+            meilleurs délais.
+          </p>
+
+          <h2>5. Sécurité</h2>
+          <p>
+            Les données sensibles (prière, situation personnelle) ne sont ni
+            publiées, ni partagées, ni utilisées à des fins commerciales. L'accès est
+            réservé aux personnes habilitées du Centre.
+          </p>
+
+          <h2>6. Hébergement</h2>
+          <p class="tiny muted">
+            L'hébergeur du site doit être renseigné ici (nom, adresse, contact) une
+            fois le déploiement effectué.
+          </p>
+        </div>
+      </section>
+    </main>
+""")
+
+
+CORPS_LEGAL = Template("""    <main id="contenu">
+      <section class="entete-page">
+        <div class="wrap wrap--narrow">
+$fil
           <p class="eyebrow">Informations légales</p>
           <h1>Mentions légales</h1>
-          <p class="lead">Dernière mise à jour : %(date)s.</p>
+          <p class="lead">Dernière mise à jour : 31 octobre 2026.</p>
         </div>
       </section>
 
@@ -1235,61 +1670,29 @@ CORPS_LEGAL = """    <main id="contenu">
         <div class="wrap wrap--narrow">
           <h2>Éditeur du site</h2>
           <p>
-            <strong>%(nom_maj)s</strong><br>
-            Adresse : %(adresse)s<br>
-            %(ville)s — %(pays)s<br>
-            Téléphone : %(telephone)s<br>
-            E-mail : <a href="mailto:%(email)s">%(email)s</a>
+            <strong>$nom_maj</strong><br>
+            Adresse : $adresse<br>
+            $ville — $pays<br>
+            Téléphone : $telephone<br>
+            E-mail : <a href="mailto:$email">$email</a>
           </p>
-          <p>
-            Responsable de la publication : <strong>%(pasteur)s</strong>, pasteur du Centre.
-          </p>
+          <p>Responsable de la publication : <strong>$pasteur</strong>, pasteur du Centre.</p>
           <p class="tiny muted">
-            Les mentions d'identification légale (numéro d'enregistrement,
-            statut associatif ou cultuel) doivent être complétées par le Centre.
+            Les mentions d'identification légale (numéro d'enregistrement, statut
+            associatif ou cultuel) doivent être complétées par le Centre.
           </p>
 
-          <h2 id="donnees">Données personnelles</h2>
+          <h2>Données personnelles</h2>
           <p>
-            Ce site est un site de présentation. Il ne crée aucun compte, ne
-            dépose aucun cookie de mesure d'audience et n'enregistre aucune
-            donnée dans une base.
-          </p>
-          <ul class="liste-propre">
-            <li>
-              <strong>Formulaires de contact et de prière.</strong> Les informations
-              que vous saisissez ne sont pas envoyées à un serveur : elles servent
-              à composer un message dans votre propre logiciel de messagerie. Vous
-              décidez de l'envoyer ou non.
-            </li>
-            <li>
-              <strong>Demandes de prière.</strong> Une fois reçues par l'équipe
-              pastorale, elles sont traitées de manière confidentielle et ne sont
-              ni publiées ni transmises à des tiers.
-            </li>
-            <li>
-              <strong>Vidéos.</strong> Les lecteurs YouTube ne sont chargés qu'après
-              un clic. Avant ce clic, aucun contenu ni cookie de YouTube n'est
-              sollicité. Après lecture, les règles de confidentialité de YouTube
-              s'appliquent.
-            </li>
-            <li>
-              <strong>Polices de caractères.</strong> Le site charge des polices
-              depuis Google Fonts ; votre adresse IP est alors transmise à ce
-              service. Une hébergement local des polices peut être mis en place
-              pour supprimer cet appel.
-            </li>
-          </ul>
-          <p>
-            Pour exercer un droit d'accès, de rectification ou de suppression,
-            écrivez à <a href="mailto:%(email)s">%(email)s</a>.
+            Le traitement des données est décrit dans la
+            <a href="confidentialite.html">politique de confidentialité</a>.
           </p>
 
           <h2>Propriété intellectuelle</h2>
           <p>
             Les textes, visuels et éléments graphiques de ce site sont la propriété
-            du %(nom)s, sauf mention contraire. Les vidéos restent la propriété de
-            leurs auteurs et sont diffusées depuis la chaîne officielle du ministère.
+            du $nom, sauf mention contraire. Les vidéos restent la propriété de leurs
+            auteurs et sont diffusées depuis la chaîne officielle du ministère.
           </p>
 
           <h2>Hébergement</h2>
@@ -1300,26 +1703,16 @@ CORPS_LEGAL = """    <main id="contenu">
 
           <h2>Litiges</h2>
           <p>
-            Le présent site est soumis au droit ivoirien. En cas de difficulté,
-            une solution amiable sera recherchée avant toute action contentieuse.
+            Le présent site est soumis au droit ivoirien. En cas de difficulté, une
+            solution amiable sera recherchée avant toute action contentieuse.
           </p>
         </div>
       </section>
     </main>
-""" % {
-    "date": "31 octobre 2026",
-    "nom": EGLISE["nom"],
-    "nom_maj": EGLISE["nom_maj"],
-    "adresse": m(EGLISE["adresse"], "à confirmer"),
-    "ville": m(EGLISE["ville"], "à confirmer"),
-    "pays": EGLISE["pays"],
-    "telephone": m(EGLISE["telephone"], "à confirmer"),
-    "email": EGLISE["email"],
-    "pasteur": EGLISE["pasteur"],
-}
+""")
 
 
-CORPS_404 = """    <main id="contenu">
+CORPS_404 = Template("""    <main id="contenu">
       <section class="section" style="min-height:60vh;display:grid;align-items:center">
         <div class="wrap wrap--narrow centre">
           <p class="eyebrow" style="justify-content:center">Erreur 404</p>
@@ -1330,177 +1723,452 @@ CORPS_404 = """    <main id="contenu">
           </p>
           <div class="hero__actions" style="justify-content:center">
             <a class="btn btn--primary btn--lg" href="index.html">Retour à l'accueil</a>
-            <a class="btn btn--ghost btn--lg" href="contact.html">Nous écrire</a>
+            <a class="btn btn--ghost btn--lg" href="nous-rejoindre.html">Nous écrire</a>
           </div>
         </div>
       </section>
     </main>
-"""
+""")
 
 
-PAGES = [
-    (
-        "index.html",
-        "Accueil",
-        "Centre des Amoureux de Dieu — une église où la Parole est enseignée avec clarté, où la prière est une respiration et où chacun est accueilli. Cultes, enseignements et demande de prière.",
-        CORPS_ACCUEIL,
-        True,
-    ),
-    (
-        "le-centre.html",
-        "Le Centre",
-        "Qui nous sommes : vision, valeurs et conduite du Centre des Amoureux de Dieu.",
-        CORPS_CENTRE,
-        True,
-    ),
-    (
-        "cultes.html",
-        "Cultes",
-        "Horaires des cultes, déroulement d'un culte et informations pour une première visite au Centre des Amoureux de Dieu.",
-        CORPS_CULTES,
-        True,
-    ),
-    (
-        "enseignements.html",
-        "Enseignements",
-        "Les enseignements et temps de prière du Centre des Amoureux de Dieu, à écouter depuis la chaîne officielle du ministère.",
-        CORPS_ENSEIGNEMENTS,
-        True,
-    ),
-    (
-        "evenements.html",
-        "Événements",
-        "Les rendez-vous et temps forts du Centre des Amoureux de Dieu.",
-        CORPS_EVENEMENTS,
-        True,
-    ),
-    (
-        "priere.html",
-        "Prière",
-        "Envoyer une demande de prière à l'équipe pastorale du Centre des Amoureux de Dieu, en toute confidentialité.",
-        CORPS_PRIERE,
-        True,
-    ),
-    (
-        "contact.html",
-        "Contact",
-        "Contacter le Centre des Amoureux de Dieu : adresse, téléphone, e-mail et formulaire.",
-        CORPS_CONTACT,
-        True,
-    ),
-    (
-        "dons.html",
-        "Faire un don",
-        "Soutenir les cultes, l'accompagnement et les actions sociales du Centre des Amoureux de Dieu.",
-        CORPS_DONS,
-        False,
-    ),
-    (
-        "mentions-legales.html",
-        "Mentions légales",
-        "Mentions légales, données personnelles et propriété intellectuelle du site du Centre des Amoureux de Dieu.",
-        CORPS_LEGAL,
-        False,
-    ),
-    (
-        "404.html",
-        "Page introuvable",
-        "La page demandée n'existe pas.",
-        CORPS_404,
-        False,
-    ),
-]
+CORPS_FICHE = Template("""    <main id="contenu">
+      <section class="entete-page">
+        <div class="wrap wrap--narrow">
+$fil
+          <p class="eyebrow">$genre · $date</p>
+          <h1>$titre</h1>
+          <ul class="meta-liste">
+            <li>Publié le <strong>$date</strong></li>
+            <li>Catégorie : <strong>$genre</strong></li>
+            <li>Par <strong>$intervenant</strong></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section section--serre">
+        <div class="wrap">
+          <div class="fiche-grille">
+            <div>
+              <div class="fiche-lecteur">
+                <button class="lecteur" type="button" data-video="$id" data-titre="$titre_attr"
+                        aria-label="Lire la vidéo : $titre_attr">
+                  <img class="vignette" src="$prefixe$vignette" alt="" width="1280" height="720">
+                  <span class="lecteur__voile" aria-hidden="true"></span>
+                  <span class="lecteur__badge" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  </span>
+                  <span class="lecteur__legende">Cliquer pour lire</span>
+                </button>
+              </div>
+
+              <h2 class="espace-haut">À propos de ce message</h2>
+              <p>
+                $resume
+              </p>
+              <div class="etat-vide" style="text-align:left">
+                <p class="tiny mb-0">
+                  Le résumé détaillé et les références bibliques de ce message seront
+                  rédigés par l'équipe du Centre. Ils ne sont pas générés
+                  automatiquement.
+                </p>
+              </div>
+
+              <h3 class="espace-haut">Partager</h3>
+              <ul class="partage">
+                <li><a href="https://www.facebook.com/sharer/sharer.php?u=$url_partage" target="_blank" rel="noopener">Facebook</a></li>
+                <li><a href="https://wa.me/?text=$texte_partage" target="_blank" rel="noopener">WhatsApp</a></li>
+                <li><button type="button" data-copier="$url_partage">Copier le lien</button></li>
+              </ul>
+            </div>
+
+            <aside>
+              <div class="carte">
+                <h3>Fiche</h3>
+                <p class="tiny muted mb-0">Titre : $titre</p>
+                <p class="tiny muted mb-0">Date : $date</p>
+                <p class="tiny muted mb-0">Catégorie : $genre</p>
+                <p class="tiny muted mb-0">Intervenant : $intervenant</p>
+                <p class="tiny muted mb-0">Source : chaîne officielle du ministère</p>
+              </div>
+              <div class="carte espace-haut">
+                <h3>Autres messages</h3>
+                <ul class="footer-liens" style="color:var(--ink-2)">
+$autres
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+""")
+
+
+CORPS_TEMOIGNAGES_PAGE = None  # marqueur de lecture : voir PAGES
+
+
+def corps_enseignements():
+    puces = "\n".join(
+        '            <button class="puce" type="button" data-filtre="%s" aria-pressed="false">%s</button>'
+        % (g, g)
+        for g in GENRES
+    )
+    return CORPS_ENSEIGNEMENTS.substitute(
+        fil=fil("Enseignements"),
+        puces=puces,
+        total=len(VIDEOS),
+        videos="\n".join(carte_video(v) for v in VIDEOS),
+        youtube=EGLISE["youtube"],
+        cta=CTA_FINAL,
+    )
+
+
+def corps_mediatheque():
+    puces = "\n".join(
+        '            <button class="puce" type="button" data-filtre="%s" aria-pressed="false">%s</button>'
+        % (g, g)
+        for g in GENRES
+    )
+    figures = []
+    for v in VIDEOS:
+        figures.append(
+            """            <figure data-genre="%s" data-titre="%s">
+              <button type="button" data-image="%s" data-legende="%s — %s">
+                <img src="%s" alt="%s" width="1280" height="800" loading="lazy">
+              </button>
+              <figcaption>%s — %s</figcaption>
+            </figure>"""
+            % (
+                v["genre"],
+                v["titre"].replace('"', "&quot;"),
+                vignette(v),
+                v["genre"],
+                v["date"],
+                vignette(v),
+                ("Vignette de la vidéo : " + v["titre"]).replace('"', "&quot;"),
+                v["genre"],
+                v["date"],
+            )
+        )
+    return CORPS_MEDIATHEQUE.substitute(
+        fil=fil("Médiathèque"),
+        puces=puces,
+        total=len(VIDEOS),
+        galerie="\n".join(figures),
+        cta=CTA_FINAL,
+    )
+
+
+# ── Instanciation des pages ───────────────────────────────────────────
+
+def corps_accueil():
+    return CORPS_ACCUEIL.substitute(
+        pays=EGLISE["pays"],
+        carte_culte=carte_culte(),
+        videos="\n".join(carte_video(v) for v in VIDEOS[:3]),
+        pasteur=PROPHETE["nom"],
+        role=PROPHETE["role"],
+        cta=CTA_FINAL,
+    )
+
+
+def corps_centre():
+    return CORPS_CENTRE.substitute(
+        fil=fil("Le Centre"),
+        pays=EGLISE["pays"],
+        pasteur=PROPHETE["nom"],
+        role=PROPHETE["role"],
+        nom_maj=EGLISE["nom_maj"],
+        annee=m(EGLISE["annee_fondation"], "année à confirmer"),
+        ville=m(EGLISE["ville"], "ville à confirmer"),
+        cta=CTA_FINAL,
+    )
+
+
+def corps_prophete():
+    return CORPS_PROPHETE.substitute(
+        fil=fil("Le Prophète"),
+        pasteur=PROPHETE["nom"],
+        nom_court=PROPHETE["nom_court"],
+        role=PROPHETE["role"],
+        youtube=EGLISE["youtube"],
+        videos="\n".join(carte_video(v) for v in VIDEOS[:3]),
+        cta=CTA_FINAL,
+    )
+
+
+def corps_programmes():
+    return CORPS_PROGRAMMES.substitute(
+        fil=fil("Programmes"),
+        creneaux=lignes_creneaux(),
+        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
+        ville=m(EGLISE["ville"], "ville à confirmer"),
+        pays=EGLISE["pays"],
+        telephone=m(EGLISE["telephone"], "téléphone à confirmer"),
+        whatsapp=m(EGLISE["whatsapp"], "WhatsApp à confirmer"),
+        aConfirmer=m(AC, "à confirmer"),
+        cta=CTA_FINAL,
+    )
+
+
+def corps_temoignages():
+    return CORPS_TEMOIGNAGES.substitute(
+        fil=fil("Témoignages"), email=EGLISE["email"], cta=CTA_FINAL
+    )
+
+
+def corps_priere():
+    return CORPS_PRIERE.substitute(fil=fil("Prière"), email=EGLISE["email"])
+
+
+def corps_rejoindre():
+    return CORPS_REJOINDRE.substitute(
+        fil=fil("Nous rejoindre"),
+        creneaux=lignes_creneaux(),
+        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
+        quartier=m(EGLISE["quartier"], "quartier à confirmer"),
+        ville=m(EGLISE["ville"], "ville à confirmer"),
+        pays=EGLISE["pays"],
+        telephone=m(EGLISE["telephone"], "téléphone à confirmer"),
+        whatsapp=m(EGLISE["whatsapp"], "WhatsApp à confirmer"),
+        email=EGLISE["email"],
+        facebook=m(EGLISE["facebook"], "page à confirmer"),
+        instagram=m(EGLISE["instagram"], "compte à confirmer"),
+        tiktok=m(EGLISE["tiktok"], "compte à confirmer"),
+        youtube=EGLISE["youtube"],
+    )
+
+
+def corps_dons():
+    return CORPS_DONS.substitute(
+        fil=fil("Faire un don"),
+        mobilemoney=m(AC, "à confirmer"),
+        iban=m(AC, "à confirmer"),
+    )
+
+
+def corps_confidentialite():
+    return CORPS_CONFIDENTIALITE.substitute(
+        fil=fil("Confidentialité"),
+        nom_maj=EGLISE["nom_maj"],
+        nom=EGLISE["nom"],
+        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
+        ville=m(EGLISE["ville"], "ville à confirmer"),
+        pays=EGLISE["pays"],
+        email=EGLISE["email"],
+    )
+
+
+def corps_legal():
+    return CORPS_LEGAL.substitute(
+        fil=fil("Mentions légales"),
+        nom=EGLISE["nom"],
+        nom_maj=EGLISE["nom_maj"],
+        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
+        ville=m(EGLISE["ville"], "ville à confirmer"),
+        pays=EGLISE["pays"],
+        telephone=m(EGLISE["telephone"], "téléphone à confirmer"),
+        email=EGLISE["email"],
+        pasteur=PROPHETE["nom"],
+    )
+
+
+def pages_simples():
+    return [
+        ("index.html", "Accueil",
+         "Centre des Amoureux de Dieu — une église où la Parole est enseignée avec clarté, où la prière est une respiration et où chacun est accueilli. Cultes, prédications, prière.",
+         corps_accueil(), True, None),
+        ("le-centre.html", "À propos",
+         "Qui nous sommes : vision, valeurs et conduite du Centre des Amoureux de Dieu.",
+         corps_centre(), True, None),
+        ("le-prophete.html", "Le Prophète",
+         "Présentation du Prophète Daniel Jeff Adou, pasteur du Centre des Amoureux de Dieu, et de son ministère.",
+         corps_prophete(), True, None),
+        ("programmes.html", "Nos programmes",
+         "Horaires des cultes, programmes spéciaux, événements et informations pour une première visite.",
+         corps_programmes(), True, None),
+        ("enseignements.html", "Prédications",
+         "Bibliothèque des prédications et enseignements du Centre des Amoureux de Dieu, avec recherche et filtres.",
+         corps_enseignements(), True, None),
+        ("mediatheque.html", "Médiathèque",
+         "Galerie des visuels du ministère : cultes, enseignements, prière, événements.",
+         corps_mediatheque(), True, None),
+        ("temoignages.html", "Témoignages",
+         "Partager un témoignage, et consulter les témoignages validés par l'équipe du Centre.",
+         corps_temoignages(), True, None),
+        ("priere.html", "Prière",
+         "Envoyer une demande de prière à l'équipe pastorale, en toute confidentialité.",
+         corps_priere(), True, None),
+        ("nous-rejoindre.html", "Nous rejoindre",
+         "Venir au Centre des Amoureux de Dieu : adresse, horaires, contacts, visite et formulaire de contact.",
+         corps_rejoindre(), True, None),
+        ("dons.html", "Faire un don",
+         "Soutenir les cultes, l'accompagnement et les actions sociales du Centre des Amoureux de Dieu.",
+         corps_dons(), False, None),
+        ("mentions-legales.html", "Mentions légales",
+         "Mentions légales, propriété intellectuelle et hébergement du site du Centre des Amoureux de Dieu.",
+         corps_legal(), False, None),
+        ("confidentialite.html", "Confidentialité",
+         "Politique de confidentialité : quelles données, pour quoi, combien de temps, et vos droits.",
+         corps_confidentialite(), False, None),
+        ("404.html", "Page introuvable",
+         "La page demandée n'existe pas.",
+         CORPS_404.substitute(), False, None),
+    ]
+
+
+def fiche(v):
+    """Fiche individuelle d'une prédication (URL partageable, données structurées)."""
+    autres = [
+        '<li><a href="%s.html">%s</a></li>' % (a["slug"], a["titre"])
+        for a in VIDEOS
+        if a["id"] != v["id"]
+    ][:4]
+    url = "%s/predications/%s.html" % (EGLISE["site"], v["slug"])
+    corps = CORPS_FICHE.substitute(
+        fil=fil(v["genre"], prefixe="../"),
+        titre=v["titre"],
+        titre_attr=v["titre"].replace('"', "&quot;"),
+        genre=v["genre"],
+        date=v["date"],
+        id=v["id"],
+        intervenant=PROPHETE["nom"],
+        prefixe="../",
+        vignette=vignette(v),
+        resume=(
+            "Message publié le %s sur la chaîne officielle du ministère. "
+            "Cette fiche rassemble la vidéo, la date de publication et les "
+            "informations de référence." % v["date"]
+        ),
+        url_partage=url,
+        texte_partage=(v["titre"] + " — " + EGLISE["nom"]).replace(" ", "%20"),
+        autres="\n".join(autres),
+    )
+    jsonld = {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": v["titre"],
+        "description": "Message du %s — %s." % (v["date"], PROPHETE["nom"]),
+        "uploadDate": v["iso"],
+        "url": url,
+        "thumbnailUrl": "%s/%s" % (EGLISE["site"], vignette(v)),
+        "embedUrl": "https://www.youtube-nocookie.com/embed/%s" % v["id"],
+        "publisher": {"@type": "Organization", "name": EGLISE["nom"]},
+    }
+    nom_complet = "%s · %s" % (v["titre"], EGLISE["nom"])
+    return page_html(
+        "predications/%s.html" % v["slug"],
+        v["titre"],
+        "%s — message du %s publié par %s." % (v["titre"], v["date"], PROPHETE["nom"]),
+        corps,
+        index=True,
+        jsonld=jsonld,
+        prefixe="../",
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════
-# 5. ÉCRITURE
+# 4. ÉCRITURE
 # ══════════════════════════════════════════════════════════════════════
+
+OBSOLETES = ["cultes.html", "evenements.html", "contact.html"]
 
 
 def ecrire():
     ecrits = []
-    for fichier, titre, description, corps, index in PAGES:
-        html = page_html(fichier, titre, description, corps, index=index)
-        chemin = os.path.join(RACINE, fichier)
-        with open(chemin, "w", encoding="utf-8") as fh:
+    for page in pages_simples():
+        fichier, titre, description, corps, index, jsonld = page
+        html = page_html(fichier, titre, description, corps, index=index, jsonld=jsonld)
+        with open(os.path.join(RACINE, fichier), "w", encoding="utf-8") as fh:
             fh.write(html)
         ecrits.append((fichier, len(html)))
+
+    dossier = os.path.join(RACINE, "predications")
+    os.makedirs(dossier, exist_ok=True)
+    for v in VIDEOS:
+        html = fiche(v)
+        chemin = os.path.join(dossier, "%s.html" % v["slug"])
+        with open(chemin, "w", encoding="utf-8") as fh:
+            fh.write(html)
+        ecrits.append(("predications/%s.html" % v["slug"], len(html)))
+
+    for nom in OBSOLETES:
+        chemin = os.path.join(RACINE, nom)
+        if os.path.exists(chemin):
+            os.remove(chemin)
     return ecrits
 
 
 def sitemap():
     entrees = []
-    for fichier, _, _, _, index in PAGES:
+    for fichier, _, _, _, index, _ in pages_simples():
         if not index:
             continue
         entrees.append(
             "  <url>\n    <loc>%s/%s</loc>\n    <changefreq>monthly</changefreq>\n    <priority>%s</priority>\n  </url>"
-            % (
-                EGLISE["site"],
-                "" if fichier == "index.html" else fichier,
-                "1.0" if fichier == "index.html" else "0.7",
-            )
+            % (EGLISE["site"], "" if fichier == "index.html" else fichier,
+               "1.0" if fichier == "index.html" else "0.7")
+        )
+    for v in VIDEOS:
+        entrees.append(
+            "  <url>\n    <loc>%s/predications/%s.html</loc>\n    <lastmod>%s</lastmod>\n    <priority>0.6</priority>\n  </url>"
+            % (EGLISE["site"], v["slug"], v["iso"])
         )
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         + "\n".join(entrees)
         + "\n</urlset>\n"
-    ).replace("http://www.sitemap.org/schemas/sitemap/0.9", "http://www.sitemaps.org/schemas/sitemap/0.9")
+    )
+
+
+MOTIF_MARQUEUR = re.compile(r'<span class="a-completer"[^>]*>(.*?)</span>', re.S)
 
 
 def contenu_a_completer():
-    """Liste les informations que l'église doit encore fournir.
-
-    Le document est PRODUIT en relisant les pages générées : il ne peut donc
-    pas annoncer un état différent de ce que le site affiche réellement.
-    """
-    import re
-
-    motif = re.compile(r'<span class="a-completer"[^>]*>(.*?)</span>', re.S)
+    """Document PRODUIT en relisant les pages écrites : il ne peut pas mentir."""
     total = 0
     blocs = []
-    for fichier, _, _, _, _ in PAGES:
-        if fichier == "404.html":
-            continue
+    fichiers = []
+    for nom in sorted(os.listdir(RACINE)):
+        if nom.endswith(".html"):
+            fichiers.append(nom)
+    dossier = os.path.join(RACINE, "predications")
+    if os.path.isdir(dossier):
+        fichiers += ["predications/" + f for f in sorted(os.listdir(dossier)) if f.endswith(".html")]
+
+    for fichier in fichiers:
         with open(os.path.join(RACINE, fichier), encoding="utf-8") as fh:
             html = fh.read()
-        trouves = motif.findall(html)
+        trouves = MOTIF_MARQUEUR.findall(html)
         if not trouves:
             continue
         total += len(trouves)
-        blocs.append(
-            "### `%s`\n\n%s\n" % (fichier, "\n".join("- %s" % t.strip() for t in trouves))
-        )
-    return total, """# Contenu à fournir par le Centre des Amoureux de Dieu
+        blocs.append("### `%s`\n\n%s\n" % (fichier, "\n".join("- %s" % t.strip() for t in trouves)))
 
-Ce fichier est **généré automatiquement** par `outils/generer.py` à partir des
-pages réellement produites. Il liste chaque information encore marquée
-« à confirmer » sur le site (fond doré pointillé).
+    doc = """# Contenu à fournir par le Centre des Amoureux de Dieu
 
-Total : **%(total)d marqueurs** sur le site.
+Fichier **généré** par `outils/generer.py` en relisant les pages réellement
+produites. Il liste chaque information encore marquée « à confirmer » (fond
+doré pointillé sur le site).
 
-## 1. Informations d'identité
+Total : **%d marqueurs** sur le site.
 
-| Champ | Valeur actuelle | À fournir |
-|---|---|---|
-| Ville | à confirmer | ville du siège |
-| Quartier | à confirmer | quartier / commune |
-| Adresse | à confirmer | adresse complète + point de repère |
-| Téléphone | à confirmer | numéro du secrétariat |
-| WhatsApp | à confirmer | numéro WhatsApp |
-| E-mail | contact@centre-des-amoureux.org | adresse e-mail réelle |
-| Année de fondation | à confirmer | année |
-| Facebook / TikTok | à confirmer | URL des pages officielles |
-| Domaine | centre-des-amoureux.org | domaine réellement acheté |
-| Logo | aucun fichier fourni | fichier PNG ou SVG (le monogramme actuel est un rendu CSS) |
-| Photo du pasteur | aucune fournie | portrait officiel |
-| Numéro Mobile Money | à confirmer | numéro marchand |
-| Coordonnées bancaires | à confirmer | IBAN / compte |
-| Hébergeur | à renseigner | nom et adresse de l'hébergeur (mentions légales) |
-| Identification légale | à compléter | numéro d'enregistrement / statut |
+## 1. Identité et contacts
 
-## 2. Horaires des cultes
+| Champ | À fournir |
+|---|---|
+| Ville / quartier / adresse complète | adresse officielle + point de repère |
+| Téléphone / WhatsApp | numéros du secrétariat |
+| E-mail | adresse réelle (actuellement `contact@centre-des-amoureux.org`, provisoire) |
+| Année de fondation, histoire du Centre | texte validé par la direction |
+| Responsables (pasteurs, anciens, départements) | liste et rôles |
+| Logo, photos officielles, portrait du Prophète | fichiers haute définition |
+| Facebook / Instagram / TikTok | URL des pages officielles |
+| Domaine, hébergeur, identification légale | informations administratives |
+| Mobile Money / coordonnées bancaires | compte marchand agréé |
+
+## 2. Horaires
 
 | Rendez-vous | Horaire |
 |---|---|
@@ -1510,16 +2178,15 @@ Total : **%(total)d marqueurs** sur le site.
 
 ## 3. Où chaque marqueur apparaît
 
-%(blocs)s
-## 4. Comment remplacer
+%s
+## 4. Après réception
 
-1. Ouvrir `outils/generer.py` et renseigner le dictionnaire `EGLISE`
-   (et la liste `CRENEAUX` pour les horaires).
+1. Renseigner `EGLISE` et `CRENEAUX` dans `outils/generer.py`.
 2. Lancer `python3 outils/generer.py`.
-3. Les 10 pages et ce fichier sont régénérés. Quand plus aucun marqueur ne
-   subsiste, retirer l'attribut `data-etat="travail"` de la balise `<html>`
-   (dans la fonction `page_html`) pour masquer le bandeau de travail.
-""" % {"total": total, "blocs": "\n".join(blocs)}
+3. Quand plus aucun marqueur ne subsiste, retirer `data-etat="travail"` de la
+   balise `<html>` dans le gabarit `T_PAGE` pour masquer le bandeau de travail.
+""" % (total, "\n".join(blocs))
+    return total, doc
 
 
 if __name__ == "__main__":
@@ -1531,5 +2198,5 @@ if __name__ == "__main__":
         fh.write(doc)
     print("marqueurs « à confirmer » : %d" % nb)
     for nom, taille in resultat:
-        print("%-26s %7d octets" % (nom, taille))
-    print("%-26s %7d octets" % ("sitemap.xml", os.path.getsize(os.path.join(RACINE, "sitemap.xml"))))
+        print("%-46s %7d octets" % (nom, taille))
+    print("%-46s %7d octets" % ("sitemap.xml", os.path.getsize(os.path.join(RACINE, "sitemap.xml"))))

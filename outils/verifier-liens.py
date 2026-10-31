@@ -18,6 +18,9 @@ from urllib.parse import urlparse
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = sorted(f for f in os.listdir(RACINE) if f.endswith(".html"))
+_SOUS = os.path.join(RACINE, "predications")
+if os.path.isdir(_SOUS):
+    PAGES += ["predications/" + f for f in sorted(os.listdir(_SOUS)) if f.endswith(".html")]
 
 erreurs = []
 liens_externes = set()
@@ -64,7 +67,7 @@ for page in PAGES:
         cible, _, ancre = valeur.partition("#")
         if not cible:
             continue
-        destination = os.path.join(RACINE, cible)
+        destination = os.path.normpath(os.path.join(os.path.dirname(chemin), cible))
         if not os.path.exists(destination):
             erreurs.append("%s : cible introuvable %s (attribut %s)" % (page, cible, attr))
             continue
@@ -81,6 +84,8 @@ for obligatoire in (
     "assets/js/site.js",
     "assets/img/favicon.svg",
     "assets/img/partage.png",
+    "predications",
+    "confidentialite.html",
 ):
     if not os.path.exists(os.path.join(RACINE, obligatoire)):
         erreurs.append("fichier indispensable absent : %s" % obligatoire)

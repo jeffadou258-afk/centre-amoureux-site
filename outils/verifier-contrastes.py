@@ -122,6 +122,8 @@ PAIRES = [
     ("bordure décorative de carte", "#D5C9B8", PAPER, 3.0, "décor"),
     ("séparateur décoratif", "#E6DED2", PAPER, 3.0, "décor"),
     # Logotype : exempté (1.4.3 ne couvre pas les logotypes)
+    ("texte blanc sur visionneuse", "#FFFCF8", "#0B0B0B", 4.5, None),
+    ("puce active : encre sur orange", INK, BRAND, 4.5, None),
     ("monogramme blanc sur dégradé", "#FFFFFF", BRAND, 4.5, "logo"),
     ("monogramme blanc sur or", "#FFFFFF", BRAND2, 4.5, "logo"),
 ]

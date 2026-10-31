@@ -1,32 +1,26 @@
 # Contenu à fournir par le Centre des Amoureux de Dieu
 
-Ce fichier est **généré automatiquement** par `outils/generer.py` à partir des
-pages réellement produites. Il liste chaque information encore marquée
-« à confirmer » sur le site (fond doré pointillé).
+Fichier **généré** par `outils/generer.py` en relisant les pages réellement
+produites. Il liste chaque information encore marquée « à confirmer » (fond
+doré pointillé sur le site).
 
-Total : **54 marqueurs** sur le site.
+Total : **97 marqueurs** sur le site.
 
-## 1. Informations d'identité
+## 1. Identité et contacts
 
-| Champ | Valeur actuelle | À fournir |
-|---|---|---|
-| Ville | à confirmer | ville du siège |
-| Quartier | à confirmer | quartier / commune |
-| Adresse | à confirmer | adresse complète + point de repère |
-| Téléphone | à confirmer | numéro du secrétariat |
-| WhatsApp | à confirmer | numéro WhatsApp |
-| E-mail | contact@centre-des-amoureux.org | adresse e-mail réelle |
-| Année de fondation | à confirmer | année |
-| Facebook / TikTok | à confirmer | URL des pages officielles |
-| Domaine | centre-des-amoureux.org | domaine réellement acheté |
-| Logo | aucun fichier fourni | fichier PNG ou SVG (le monogramme actuel est un rendu CSS) |
-| Photo du pasteur | aucune fournie | portrait officiel |
-| Numéro Mobile Money | à confirmer | numéro marchand |
-| Coordonnées bancaires | à confirmer | IBAN / compte |
-| Hébergeur | à renseigner | nom et adresse de l'hébergeur (mentions légales) |
-| Identification légale | à compléter | numéro d'enregistrement / statut |
+| Champ | À fournir |
+|---|---|
+| Ville / quartier / adresse complète | adresse officielle + point de repère |
+| Téléphone / WhatsApp | numéros du secrétariat |
+| E-mail | adresse réelle (actuellement `contact@centre-des-amoureux.org`, provisoire) |
+| Année de fondation, histoire du Centre | texte validé par la direction |
+| Responsables (pasteurs, anciens, départements) | liste et rôles |
+| Logo, photos officielles, portrait du Prophète | fichiers haute définition |
+| Facebook / Instagram / TikTok | URL des pages officielles |
+| Domaine, hébergeur, identification légale | informations administratives |
+| Mobile Money / coordonnées bancaires | compte marchand agréé |
 
-## 2. Horaires des cultes
+## 2. Horaires
 
 | Rendez-vous | Horaire |
 |---|---|
@@ -36,66 +30,16 @@ Total : **54 marqueurs** sur le site.
 
 ## 3. Où chaque marqueur apparaît
 
-### `index.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `le-centre.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `cultes.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `enseignements.html`
+### `404.html`
 
 - à confirmer
 - à confirmer
 - à confirmer
 
-### `evenements.html`
+### `confidentialite.html`
 
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `priere.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `contact.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
+- adresse à confirmer
+- ville à confirmer
 - à confirmer
 - à confirmer
 - à confirmer
@@ -108,8 +52,83 @@ Total : **54 marqueurs** sur le site.
 - à confirmer
 - à confirmer
 
+### `enseignements.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `index.html`
+
+- horaire à confirmer
+- horaire à confirmer
+- horaire à confirmer
+- ville à confirmer
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `le-centre.html`
+
+- année à confirmer
+- ville à confirmer
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `le-prophete.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `mediatheque.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
 ### `mentions-legales.html`
 
+- adresse à confirmer
+- ville à confirmer
+- téléphone à confirmer
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `nous-rejoindre.html`
+
+- adresse à confirmer
+- quartier à confirmer
+- ville à confirmer
+- téléphone à confirmer
+- WhatsApp à confirmer
+- à confirmer
+- à confirmer
+- à confirmer
+- page à confirmer
+- compte à confirmer
+- compte à confirmer
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `priere.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `programmes.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+- adresse à confirmer
+- ville à confirmer
+- téléphone à confirmer
+- WhatsApp à confirmer
 - à confirmer
 - à confirmer
 - à confirmer
@@ -117,11 +136,63 @@ Total : **54 marqueurs** sur le site.
 - à confirmer
 - à confirmer
 
-## 4. Comment remplacer
+### `temoignages.html`
 
-1. Ouvrir `outils/generer.py` et renseigner le dictionnaire `EGLISE`
-   (et la liste `CRENEAUX` pour les horaires).
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/huile-coeur-et-trone-partie-1.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/huile-coeur-et-trone.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/onction-royale-10-choses-a-savoir.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/onction-royale-10-choses.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/prions-ensemble.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/reconnaitre-un-sorcier.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/service-prohetique.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+### `predications/tous-les-grands-ont-reve-grand.html`
+
+- à confirmer
+- à confirmer
+- à confirmer
+
+## 4. Après réception
+
+1. Renseigner `EGLISE` et `CRENEAUX` dans `outils/generer.py`.
 2. Lancer `python3 outils/generer.py`.
-3. Les 10 pages et ce fichier sont régénérés. Quand plus aucun marqueur ne
-   subsiste, retirer l'attribut `data-etat="travail"` de la balise `<html>`
-   (dans la fonction `page_html`) pour masquer le bandeau de travail.
+3. Quand plus aucun marqueur ne subsiste, retirer `data-etat="travail"` de la
+   balise `<html>` dans le gabarit `T_PAGE` pour masquer le bandeau de travail.

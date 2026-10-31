@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Prière · Centre des Amoureux de Dieu</title>
-    <meta name="description" content="Envoyer une demande de prière à l'équipe pastorale du Centre des Amoureux de Dieu, en toute confidentialité.">
+    <meta name="description" content="Envoyer une demande de prière à l'équipe pastorale, en toute confidentialité.">
     <meta name="robots" content="index,follow">
     <meta name="theme-color" content="#ED6C10">
     <link rel="canonical" href="https://centre-des-amoureux.org/priere.html">
@@ -15,7 +15,7 @@
     <meta property="og:site_name" content="Centre des Amoureux de Dieu">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:title" content="Prière">
-    <meta property="og:description" content="Envoyer une demande de prière à l'équipe pastorale du Centre des Amoureux de Dieu, en toute confidentialité.">
+    <meta property="og:description" content="Envoyer une demande de prière à l'équipe pastorale, en toute confidentialité.">
     <meta property="og:url" content="https://centre-des-amoureux.org/priere.html">
     <meta property="og:image" content="https://centre-des-amoureux.org/assets/img/partage.png">
     <meta name="twitter:card" content="summary_large_image">
@@ -67,13 +67,17 @@
         <nav class="nav" id="nav-principal" data-ouvert="false" aria-label="Navigation principale">
           <a href="index.html">Accueil</a>
           <a href="le-centre.html">Le Centre</a>
-          <a href="cultes.html">Cultes</a>
+          <a href="le-prophete.html">Le Prophète</a>
+          <a href="programmes.html">Programmes</a>
           <a href="enseignements.html">Enseignements</a>
-          <a href="evenements.html">Événements</a>
+          <a href="mediatheque.html">Médiathèque</a>
+          <a href="temoignages.html">Témoignages</a>
           <a href="priere.html" aria-current="page">Prière</a>
-          <a href="contact.html">Contact</a>
-          <a class="btn btn--primary" href="dons.html">Faire un don</a>
+          <a href="nous-rejoindre.html">Nous rejoindre</a>
+          <a class="btn btn--primary nav__don" href="dons.html">Faire un don</a>
         </nav>
+
+        <a class="btn btn--primary nav-cta" href="dons.html">Faire un don</a>
       </div>
     </header>
 
@@ -83,10 +87,10 @@
           <nav class="fil" aria-label="Fil d'Ariane">
             <a href="index.html">Accueil</a><span aria-hidden="true">/</span><span>Prière</span>
           </nav>
-          <p class="eyebrow">Prière</p>
+          <p class="eyebrow">Demande de prière</p>
           <h1>Déposez ce qui pèse sur votre cœur.</h1>
           <p class="lead">
-            Santé, famille, travail, direction de vie, action de grâce : écrivez-nous.
+            Santé, famille, travail, mariage, études, finances : écrivez-nous.
             Une personne de l'équipe pastorale priera pour votre intention.
           </p>
         </div>
@@ -100,27 +104,39 @@
               <form class="formulaire" data-mailto="contact@centre-des-amoureux.org" data-sujet="Demande de prière — site du Centre">
                 <div class="champ--duo">
                   <div class="champ">
-                    <label for="prenom">Prénom</label>
-                    <input id="prenom" name="prenom" type="text" autocomplete="given-name" required>
+                    <label for="p-nom">Nom ou pseudonyme</label>
+                    <input id="p-nom" name="nom" type="text" required>
                   </div>
                   <div class="champ">
-                    <label for="contact">Téléphone ou e-mail <span class="aide">(facultatif)</span></label>
-                    <input id="contact" name="contact" type="text" autocomplete="email">
+                    <label for="p-contact">E-mail ou téléphone <span class="aide">(facultatif)</span></label>
+                    <input id="p-contact" name="contact" type="text">
                   </div>
                 </div>
                 <div class="champ">
-                  <label for="sujet">Sujet de prière</label>
-                  <input id="sujet" name="sujet" type="text" placeholder="En quelques mots" required>
+                  <label for="p-categorie">Catégorie</label>
+                  <select id="p-categorie" name="categorie">
+                    <option>Famille</option>
+                    <option>Santé</option>
+                    <option>Travail</option>
+                    <option>Mariage</option>
+                    <option>Études et concours</option>
+                    <option>Finances</option>
+                    <option>Vie spirituelle</option>
+                    <option>Autre situation</option>
+                  </select>
                 </div>
                 <div class="champ">
-                  <label for="message">Votre message</label>
-                  <textarea id="message" name="message" required></textarea>
-                  <span class="aide">Vous pouvez écrire librement. Rien n'est publié.</span>
+                  <label for="p-sujet">Sujet de prière</label>
+                  <input id="p-sujet" name="sujet" type="text" placeholder="En quelques mots" required>
                 </div>
                 <div class="champ">
-                  <label for="confidentialite">Confidentialité</label>
-                  <select id="confidentialite" name="confidentialite">
-                    <option>Demande confidentielle (équipe pastorale uniquement)</option>
+                  <label for="p-message">Votre demande</label>
+                  <textarea id="p-message" name="message" required></textarea>
+                </div>
+                <div class="champ">
+                  <label for="p-confidentialite">Confidentialité</label>
+                  <select id="p-confidentialite" name="confidentialite">
+                    <option>Strictement confidentielle (équipe pastorale uniquement)</option>
                     <option>Peut être partagée en réunion de prière, sans mon nom</option>
                   </select>
                 </div>
@@ -143,8 +159,9 @@
                 <h3>Ce que devient votre demande</h3>
                 <ul class="liste-propre mb-0">
                   <li>Elle est lue par une personne de l'équipe pastorale.</li>
-                  <li>Elle n'est ni publiée, ni partagée sans votre accord.</li>
-                  <li>Vous pouvez demander qu'elle soit supprimée à tout moment.</li>
+                  <li>Elle n'est jamais publiée ni rendue publique.</li>
+                  <li>Elle n'est pas partagée sans votre accord.</li>
+                  <li>Vous pouvez demander sa suppression à tout moment.</li>
                 </ul>
               </div>
               <div class="encart encart--or espace-haut">
@@ -172,6 +189,7 @@
       </section>
     </main>
 
+
     <footer class="site-footer">
       <div class="wrap">
         <div class="footer-grille">
@@ -187,27 +205,25 @@
               Une maison de prière, de Parole et d'amour fraternel, ouverte à tous.
             </p>
             <p class="tiny" style="margin-top:18px">
-              <a href="https://www.youtube.com/@jeffadou3161" rel="noopener" target="_blank">
-                Chaîne YouTube du ministère
-              </a>
+              <a href="https://www.youtube.com/@jeffadou3161" rel="noopener" target="_blank">Chaîne YouTube du ministère</a>
             </p>
           </div>
           <div>
             <h3>Le Centre</h3>
             <ul class="footer-liens">
               <li><a href="le-centre.html">Qui nous sommes</a></li>
-              <li><a href="le-centre.html#vision">Notre vision</a></li>
-              <li><a href="cultes.html">Nos cultes</a></li>
-              <li><a href="evenements.html">Événements</a></li>
+              <li><a href="le-prophete.html">Le Prophète</a></li>
+              <li><a href="programmes.html">Nos programmes</a></li>
+              <li><a href="temoignages.html">Témoignages</a></li>
             </ul>
           </div>
           <div>
             <h3>Ressources</h3>
             <ul class="footer-liens">
               <li><a href="enseignements.html">Enseignements</a></li>
+              <li><a href="mediatheque.html">Médiathèque</a></li>
               <li><a href="priere.html">Demande de prière</a></li>
               <li><a href="dons.html">Faire un don</a></li>
-              <li><a href="contact.html">Nous contacter</a></li>
             </ul>
           </div>
           <div>
@@ -225,8 +241,8 @@
           <p class="mb-0">© <span data-annee>2026</span> Centre des Amoureux de Dieu. Tous droits réservés.</p>
           <ul>
             <li><a href="mentions-legales.html">Mentions légales</a></li>
-            <li><a href="mentions-legales.html#donnees">Données personnelles</a></li>
-            <li><a href="contact.html">Contact</a></li>
+            <li><a href="confidentialite.html">Confidentialité</a></li>
+            <li><a href="nous-rejoindre.html">Contact</a></li>
           </ul>
         </div>
       </div>

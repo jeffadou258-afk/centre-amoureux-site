@@ -11,7 +11,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://centre-des-amoureux.org/cultes.html</loc>
+    <loc>https://centre-des-amoureux.org/le-prophete.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/programmes.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -21,7 +26,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://centre-des-amoureux.org/evenements.html</loc>
+    <loc>https://centre-des-amoureux.org/mediatheque.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/temoignages.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -31,8 +41,48 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://centre-des-amoureux.org/contact.html</loc>
+    <loc>https://centre-des-amoureux.org/nous-rejoindre.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/tous-les-grands-ont-reve-grand.html</loc>
+    <lastmod>2026-10-17</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/onction-royale-10-choses-a-savoir.html</loc>
+    <lastmod>2026-10-16</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/onction-royale-10-choses.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/huile-coeur-et-trone.html</loc>
+    <lastmod>2026-09-28</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/prions-ensemble.html</loc>
+    <lastmod>2026-09-24</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/huile-coeur-et-trone-partie-1.html</loc>
+    <lastmod>2026-09-22</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/reconnaitre-un-sorcier.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://centre-des-amoureux.org/predications/service-prohetique.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.6</priority>
   </url>
 </urlset>
