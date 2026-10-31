@@ -4,7 +4,7 @@ Fichier **généré** par `outils/generer.py` en relisant les pages réellement
 produites. Il liste chaque information encore marquée « à confirmer » (fond
 doré pointillé sur le site).
 
-Total : **97 marqueurs** sur le site.
+Total : **13 marqueurs** sur le site.
 
 ## 1. Identité et contacts
 
@@ -30,161 +30,26 @@ Total : **97 marqueurs** sur le site.
 
 ## 3. Où chaque marqueur apparaît
 
-### `404.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `confidentialite.html`
-
-- adresse à confirmer
-- ville à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
 ### `dons.html`
 
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `enseignements.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `index.html`
-
-- horaire à confirmer
-- horaire à confirmer
-- horaire à confirmer
-- ville à confirmer
-- à confirmer
 - à confirmer
 - à confirmer
 
 ### `le-centre.html`
 
-- année à confirmer
-- ville à confirmer
 - à confirmer
 - à confirmer
-- à confirmer
-
-### `le-prophete.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `mediatheque.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `mentions-legales.html`
-
-- adresse à confirmer
-- ville à confirmer
-- téléphone à confirmer
 - à confirmer
 - à confirmer
 - à confirmer
 
 ### `nous-rejoindre.html`
 
-- adresse à confirmer
-- quartier à confirmer
-- ville à confirmer
-- téléphone à confirmer
-- WhatsApp à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
 - page à confirmer
 - compte à confirmer
 - compte à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `priere.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
 
 ### `programmes.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-- adresse à confirmer
-- ville à confirmer
-- téléphone à confirmer
-- WhatsApp à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `temoignages.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/huile-coeur-et-trone-partie-1.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/huile-coeur-et-trone.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/onction-royale-10-choses-a-savoir.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/onction-royale-10-choses.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/prions-ensemble.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/reconnaitre-un-sorcier.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/service-prohetique.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
-
-### `predications/tous-les-grands-ont-reve-grand.html`
 
 - à confirmer
 - à confirmer

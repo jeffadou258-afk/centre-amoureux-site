@@ -34,11 +34,11 @@ EGLISE = {
     "nom_maj": "CENTRE DES AMOUREUX DE DIEU",
     "sigle": "CAD",
     "pays": "Côte d'Ivoire",
-    "ville": AC,
-    "quartier": AC,
-    "adresse": AC,
-    "telephone": AC,
-    "whatsapp": AC,
+    "ville": "Abidjan",
+    "quartier": "Cocody Rivera 2",
+    "adresse": "Cocody Rivera 2, en face de l'imprimerie DA Communication",
+    "telephone": "+225 07 87 59 32 89",
+    "whatsapp": "+225 07 87 59 32 89",
     "email": "contact@centre-des-amoureux.org",
     "youtube": "https://www.youtube.com/@jeffadou3161",
     "facebook": AC,
@@ -58,10 +58,44 @@ PROPHETE = {
     "chaine": EGLISE["youtube"],
 }
 
+# Horaires communiqués par le Centre le 31/10/2026.
+# Le culte du mercredi a lieu « en quinze » : une semaine sur deux.
 CRENEAUX = [
-    ("Dimanche", "Culte d'adoration", AC),
-    ("Mercredi", "Culte de la Parole", AC),
-    ("Vendredi", "Nuit de prière", AC),
+    ("Dimanche", "Culte d'adoration", "14h00 – 18h30"),
+    ("Mercredi", "Culte de la Parole (toutes les deux semaines)", "19h00 – 21h00"),
+]
+
+# ── Vision, mission et valeurs officielles (document de la direction) ──
+VISION = ("Former des ouvriers et des serviteurs de Dieu, bâtir une armée "
+          "d'amoureux passionnés pour Dieu et les équiper pour impacter la société.")
+
+MISSION = ("Par la prédication de la Parole, l'évangélisation, la formation biblique "
+           "et le développement de leaders, nous équipons nos membres pour qu'ils "
+           "deviennent des serviteurs fidèles capables de transformer leur famille, "
+           "leur communauté et impacter positivement la société.")
+
+VALEURS = [
+    ("Amour", "Servir et agir avec compassion envers Dieu et envers les autres.", "Jean 13 : 34-35"),
+    ("Foi", "Croire en Dieu et en Sa Parole dans toutes les situations, et vivre selon cette confiance.", "Hébreux 11 : 1"),
+    ("Intégrité", "Être honnête, transparent et fidèle dans toutes nos actions.", "Proverbes 10 : 9"),
+    ("Crainte de Dieu", "Respecter et honorer Dieu dans nos pensées, paroles et actions.", "Proverbes 9 : 10"),
+    ("Obéissance à la Parole", "Mettre en pratique les enseignements bibliques dans notre vie quotidienne.", "Jacques 1 : 22"),
+    ("Excellence", "Poursuivre la qualité et la diligence dans tout ce que nous faisons pour glorifier Dieu.", "Colossiens 3 : 23"),
+]
+
+# Responsable omis = poste non encore communiqué (affiché « à confirmer »).
+DEPARTEMENTS = [
+    ("Accueil des nouveaux", "Koffi Prisca", "Prise en charge des nouveaux et des visiteurs, orientation vers les cellules et le pasteur."),
+    ("Sentinelles (intercession)", None, "Couvre l'église en prière, intercède avant et pendant chaque culte."),
+    ("La Voix des Chérubins (chantres)", "Lilian Armoo", "Prépare l'atmosphère spirituelle : louange, adoration, répétitions."),
+    ("Médias", "N'Taye Daniel", "Sonorisation, captation, diffusion en direct, réseaux sociaux et visuels."),
+    ("Gagneurs d'âmes (évangélisation)", "Carmel Yao", "Sorties d'évangélisation, campagnes et suivi des nouveaux convertis."),
+    ("Accueil général", "Marylène", "Accueil à l'entrée, placement, ordre et propreté du lieu."),
+    ("Gestion des cultes", None, "Coordonne le programme du culte et les plannings des intervenants."),
+    ("Trésorerie", None, "Dîmes, offrandes, comptabilité et rapports au pasteur."),
+    ("Secrétariat", None, "Documents, courriers, plannings et comptes rendus de réunions."),
+    ("Moyens généraux", "Kossonou Léon", "Logistique matérielle : chaises, tentes, eau, entretien."),
+    ("Services d'ordre", None, "Sécurité des lieux, maintien de l'ordre et gestion des flux."),
 ]
 
 VIDEOS = [
@@ -253,8 +287,8 @@ T_PAGE = Template("""<!doctype html>
     <meta name="robots" content="$robots">
     <meta name="theme-color" content="#ED6C10">
     <link rel="canonical" href="$canonical">
-    <link rel="icon" href="${prefixe}assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="${prefixe}assets/img/favicon.svg">
+    <link rel="icon" href="${prefixe}assets/img/icone-512.png" type="image/png">
+    <link rel="apple-touch-icon" href="${prefixe}assets/img/icone-512.png">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="$nom">
@@ -283,7 +317,8 @@ $jsonld
     <header class="site-header">
       <div class="wrap">
         <a class="marque" href="${prefixe}index.html" aria-label="$nom — accueil">
-          <span class="marque__tuile" aria-hidden="true">$sigle</span>
+          <img class="marque__logo" src="${prefixe}assets/img/logo-flamme.png"
+               alt="" width="26" height="46" fetchpriority="high">
           <span class="marque__texte">
             <span class="marque__nom">$nom</span>
             <span class="marque__sous">$pays</span>
@@ -310,7 +345,8 @@ $corps
         <div class="footer-grille">
           <div>
             <a class="marque" href="${prefixe}index.html">
-              <span class="marque__tuile" aria-hidden="true">$sigle</span>
+              <img class="marque__logo" src="${prefixe}assets/img/logo-flamme.png"
+               alt="" width="26" height="46" fetchpriority="high">
               <span class="marque__texte">
                 <span class="marque__nom">$nom</span>
                 <span class="marque__sous">$pays</span>
@@ -394,7 +430,13 @@ def page_html(page, titre, description, corps, index=True, jsonld=None, prefixe=
             "alternateName": EGLISE["nom_maj"],
             "description": "Église du Centre des Amoureux de Dieu — cultes, enseignements, prière et vie fraternelle.",
             "url": EGLISE["site"],
-            "address": {"@type": "PostalAddress", "addressCountry": "CI"},
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": EGLISE["adresse"],
+                "addressLocality": EGLISE["ville"],
+                "addressCountry": "CI",
+            },
+            "telephone": EGLISE["telephone"],
             "sameAs": [EGLISE["youtube"]],
         }
     return T_PAGE.substitute(
@@ -428,7 +470,7 @@ CORPS_ACCUEIL = Template("""    <main id="contenu">
         <div class="wrap">
           <div class="hero__grille">
             <div>
-              <p class="eyebrow monte">Église · $pays</p>
+              <p class="eyebrow monte">Église · Cocody Rivera 2, Abidjan</p>
               <h1 class="monte monte--2">
                 Un lieu pour <em>aimer Dieu</em>,<br>et être aimé de Lui.
               </h1>
@@ -443,7 +485,8 @@ CORPS_ACCUEIL = Template("""    <main id="contenu">
               </div>
               <p class="hero__note monte monte--3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.4-7 10-7 10Z"/></svg>
-                Ouvert à tous, sans condition et sans tenue exigée. Venez comme vous êtes.
+                Ouvert à tous, sans condition et sans tenue exigée. Culte le dimanche
+                de 14h00 à 18h30, à Cocody Rivera 2.
               </p>
             </div>
 $carte_culte
@@ -529,14 +572,10 @@ $videos
       <section class="section section--alt">
         <div class="wrap">
           <div class="grille grille--2" style="align-items:center;gap:clamp(28px,5vw,64px)">
-            <div class="carte" style="text-align:center">
-              <div class="carte__icone" style="margin-inline:auto;width:76px;height:76px;border-radius:50%;background:linear-gradient(145deg,#ED2727,#ED6C10 55%,#EF9C19);color:#fff">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/></svg>
-              </div>
-              <h3 style="margin-bottom:4px">$pasteur</h3>
-              <p class="tiny muted">$role</p>
-              <a class="link-arrow" href="le-prophete.html">Découvrir son ministère</a>
-            </div>
+            <figure class="portrait" style="margin:0">
+              <img src="assets/img/prophete-bras-croises.jpg" alt="$pasteur"
+                   width="720" height="960" loading="lazy">
+            </figure>
             <div>
               <p class="eyebrow">Le Prophète</p>
               <h2>Une parole portée, pas seulement prononcée.</h2>
@@ -585,72 +624,128 @@ CORPS_CENTRE = Template("""    <main id="contenu">
         <div class="wrap wrap--narrow">
 $fil
           <p class="eyebrow">Qui nous sommes</p>
-          <h1>Une église, une famille, une direction.</h1>
+          <h1>Une église, une famille, une armée d'amoureux.</h1>
           <p class="lead">
-            Le Centre des Amoureux de Dieu est une communauté chrétienne établie
-            en $pays. Nous croyons qu'une église est d'abord un lieu où l'on
-            apprend à aimer Dieu et à aimer les autres.
+            Le Centre des Amoureux de Dieu est une communauté chrétienne établie à
+            $ville, en $pays. Notre raison d'être tient en une phrase : former des
+            ouvriers, bâtir une armée d'amoureux passionnés pour Dieu, et les
+            équiper pour impacter la société.
           </p>
+        </div>
+      </section>
+
+      <section class="section" id="vision">
+        <div class="wrap">
+          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px);align-items:center">
+            <div>
+              <p class="eyebrow">Notre vision</p>
+              <h2>Former, bâtir, équiper.</h2>
+              <p class="lead">« $vision »</p>
+              <ul class="liste-propre">
+                <li><strong>Former des ouvriers et des serviteurs</strong> — équiper les membres pour le ministère et le service.</li>
+                <li><strong>Bâtir une armée d'amoureux passionnés</strong> — créer un peuple engagé et motivé.</li>
+                <li><strong>Impacter la société</strong> — influencer positivement les familles, les communautés et les nations.</li>
+              </ul>
+            </div>
+            <div class="encart encart--or">
+              <p class="verse">
+                « Le plus petit deviendra un millier, et le moindre, une nation puissante. »
+                <cite>Ésaïe 60 : 22</cite>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt">
+        <div class="wrap">
+          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px);align-items:start">
+            <div>
+              <p class="eyebrow">Notre mission</p>
+              <h2>Comment nous y allons.</h2>
+              <p>« $mission »</p>
+            </div>
+            <div class="carte">
+              <h3>Nos actions concrètes</h3>
+              <ul class="liste-propre mb-0">
+                <li>Prédication et enseignement biblique</li>
+                <li>Évangélisation et formation continue</li>
+                <li>Développement de leaders passionnés</li>
+                <li>Implication dans la transformation de la société</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="valeurs">
+        <div class="wrap">
+          <div class="section__entete">
+            <p class="eyebrow">Nos valeurs</p>
+            <h2>Les principes qui nous gouvernent</h2>
+            <p class="lead">
+              Six valeurs, chacune rattachée à un texte biblique : elles servent de
+              référence à nos décisions et à nos projets.
+            </p>
+          </div>
+          <div class="grille grille--3">
+$valeurs
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--alt" id="departements">
+        <div class="wrap">
+          <div class="section__entete">
+            <p class="eyebrow">Nos départements</p>
+            <h2>Onze services, une même maison</h2>
+            <p class="lead">
+              Chaque département a sa mission et son responsable. Les postes dont le
+              responsable n'est pas encore communiqué sont signalés comme tels.
+            </p>
+          </div>
+          <div class="grille grille--3">
+$departements
+          </div>
         </div>
       </section>
 
       <section class="section">
         <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px)">
+          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px);align-items:center">
             <div>
-              <h2>Notre raison d'être</h2>
+              <p class="eyebrow">Le pasteur</p>
+              <h2>$pasteur</h2>
+              <p class="lead">$role</p>
               <p>
-                Rassembler des personnes de tous horizons autour de la Parole de
-                Dieu, les accompagner dans leur marche spirituelle et les rendre
-                capables d'aimer Dieu et leur prochain d'un amour sincère.
+                Le Centre des Amoureux de Dieu est conduit par le $pasteur, dont
+                l'enseignement est diffusé chaque semaine sur la chaîne du ministère.
               </p>
-              <p>
-                Concrètement : des cultes réguliers, des enseignements accessibles,
-                des temps de prière, et un accompagnement humain pour les moments
-                de joie comme pour les épreuves.
-              </p>
+              <a class="link-arrow" href="le-prophete.html">Le présenter en détail</a>
             </div>
-            <div class="encart">
-              <p class="verse">
-                « Tu aimeras le Seigneur, ton Dieu, de tout ton cœur, de toute ton
-                âme, et de toute ta pensée. C'est le premier et le plus grand
-                commandement. Et voici le second, qui lui est semblable : Tu aimeras
-                ton prochain comme toi-même. »
-                <cite>Matthieu 22 : 37-39</cite>
-              </p>
-            </div>
+            <figure class="portrait" style="margin:0">
+              <img src="assets/img/prophete-portrait.jpg" alt="$pasteur"
+                   width="852" height="1150" loading="lazy">
+            </figure>
           </div>
         </div>
       </section>
 
-      <section class="section section--alt" id="vision">
+      <section class="section section--ink">
         <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Notre vision</p>
-            <h2>Ce vers quoi nous marchons</h2>
-          </div>
-          <div class="grille grille--3">
-            <article class="carte">
-              <div class="carte__icone" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M6 8h12"/><path d="M12 21c3.3 0 6-2.2 6-5H6c0 2.8 2.7 5 6 5Z"/></svg>
-              </div>
-              <h3>Une adoration sincère</h3>
-              <p class="muted">Que notre louange soit vraie, et non une habitude.</p>
-            </article>
-            <article class="carte">
-              <div class="carte__icone carte__icone--or" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M8 8h8M8 12h5"/></svg>
-              </div>
-              <h3>Une Parole comprise</h3>
-              <p class="muted">Que chacun reparte avec quelque chose de clair à vivre.</p>
-            </article>
-            <article class="carte">
-              <div class="carte__icone" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2"/><path d="M16 14.6c2.6.3 4.5 2.3 4.5 5"/></svg>
-              </div>
-              <h3>Une famille unie</h3>
-              <p class="muted">Que personne ne traverse seul ce que Dieu lui fait vivre.</p>
-            </article>
+          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px);align-items:center">
+            <div>
+              <p class="eyebrow eyebrow--or" style="color:#EF9C19">Le logo du Centre</p>
+              <h2>La flamme et la colombe.</h2>
+              <p>
+                Un oiseau qui prend son envol dans une flamme : la passion pour Dieu
+                et la liberté qu'Il donne. Le logo animé ci-contre est celui du Centre.
+              </p>
+            </div>
+            <video class="logo-video" src="assets/img/logo-anime.mp4"
+                   poster="assets/img/logo-animation-affiche.jpg"
+                   autoplay muted loop playsinline preload="metadata"
+                   aria-label="Logo animé du Centre des Amoureux de Dieu"></video>
           </div>
         </div>
       </section>
@@ -662,60 +757,32 @@ $fil
               <h2>Notre histoire</h2>
               <div class="etat-vide" style="text-align:left">
                 <p class="mb-0">
-                  L'histoire du Centre, son année de fondation et les étapes de son
-                  développement seront publiées ici dès que la direction les aura
-                  communiquées. Aucun récit n'est inventé : cette page reste vide
-                  plutôt que remplie de faits non vérifiés.
+                  L'année de fondation et les étapes du développement du Centre
+                  seront publiées ici dès que la direction les aura communiquées.
+                  Aucun récit n'est inventé : cette page reste vide plutôt que
+                  remplie de faits non vérifiés.
                 </p>
               </div>
             </div>
             <div>
-              <h2>Nos responsables</h2>
+              <h2>Nous rendre visite</h2>
               <div class="carte">
-                <h3 style="margin-bottom:4px">$pasteur</h3>
-                <p class="tiny muted">$role</p>
-                <p class="tiny muted mb-0">
-                  La liste des responsables (pasteurs, anciens, responsables de
-                  départements) doit être fournie par le Centre.
+                <p class="carte__numero">Adresse</p>
+                <p class="mb-0"><strong>$adresse</strong></p>
+                <p class="mb-0">$quartier — $ville</p>
+                <p class="tiny muted espace-haut mb-0">
+                  Culte le dimanche de 14h00 à 18h30. Culte de la Parole le mercredi,
+                  une semaine sur deux, de 19h00 à 21h00.
                 </p>
               </div>
-              <a class="link-arrow espace-haut" href="le-prophete.html">Page du Prophète</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="section__entete section__entete--centre">
-            <p class="eyebrow">Repères</p>
-            <h2>Quelques informations</h2>
-          </div>
-          <div class="grille grille--4">
-            <div class="carte">
-              <p class="carte__numero">Église</p>
-              <p class="mb-0"><strong>$nom_maj</strong></p>
-            </div>
-            <div class="carte">
-              <p class="carte__numero">Fondation</p>
-              <p class="mb-0">$annee</p>
-            </div>
-            <div class="carte">
-              <p class="carte__numero">Pays</p>
-              <p class="mb-0">$pays</p>
-            </div>
-            <div class="carte">
-              <p class="carte__numero">Ville</p>
-              <p class="mb-0">$ville</p>
+              <a class="btn btn--primary espace-haut" href="nous-rejoindre.html">Préparer ma visite</a>
             </div>
           </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="wrap">
-          $cta
-        </div>
+        <div class="wrap">$cta</div>
       </section>
     </main>
 """)
@@ -758,16 +825,10 @@ $fil
               </div>
             </div>
             <div>
-              <div class="carte" style="text-align:center">
-                <div class="carte__icone" style="margin-inline:auto;width:88px;height:88px;border-radius:50%;background:linear-gradient(145deg,#ED2727,#ED6C10 55%,#EF9C19);color:#fff">
-                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/></svg>
-                </div>
-                <h3 style="margin-bottom:4px">$nom_court</h3>
-                <p class="tiny muted">$role</p>
-                <p class="tiny muted mb-0">
-                  Portrait officiel à fournir par le Centre.
-                </p>
-              </div>
+              <figure class="portrait" style="margin:0">
+                <img src="assets/img/prophete-portrait.jpg" alt="$pasteur"
+                     width="852" height="1150" loading="lazy">
+              </figure>
               <a class="btn btn--primary espace-haut" href="$youtube" target="_blank" rel="noopener" style="width:100%">
                 Voir sa chaîne YouTube
               </a>
@@ -817,12 +878,25 @@ $videos
 
       <section class="section section--alt">
         <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
+          <div class="section__entete">
+            <p class="eyebrow">Photographies officielles</p>
+            <h2>Le Prophète en images</h2>
+          </div>
+          <div class="galerie-portraits">
+            <img src="assets/img/prophete-portrait.jpg" alt="Portrait officiel du $pasteur"
+                 width="852" height="1150" loading="lazy">
+            <img src="assets/img/prophete-face.jpg" alt="Le $pasteur, portrait de face"
+                 width="720" height="960" loading="lazy">
+            <img src="assets/img/prophete-bras-croises.jpg" alt="Le $pasteur, bras croisés"
+                 width="720" height="960" loading="lazy">
+          </div>
+          <div class="grille grille--2 espace-haut" style="gap:clamp(24px,4vw,48px)">
             <div class="etat-vide">
-              <h3>Photographies officielles</h3>
+              <h3>Photos du Centre</h3>
               <p class="tiny mb-0">
-                Les photos du Prophète et du Centre doivent être fournies en haute
-                définition. Aucune image de substitution n'est utilisée.
+                Les photographies du lieu, des cultes et des événements doivent être
+                fournies en haute définition. Aucune image de substitution n'est
+                utilisée.
               </p>
             </div>
             <div class="etat-vide">
@@ -1376,12 +1450,16 @@ $fil
                   L'adresse e-mail est provisoire et sera remplacée par l'adresse officielle.
                 </p>
               </div>
-              <div class="etat-vide espace-haut">
-                <h3>Plan d'accès et itinéraire</h3>
-                <p class="tiny mb-0">
-                  La carte interactive sera intégrée dès que l'adresse exacte sera
-                  fournie par le secrétariat.
+              <div class="carte espace-haut">
+                <h3>Plan d'accès</h3>
+                <p class="tiny muted">
+                  Nous sommes à Cocody Rivera 2, en face de l'imprimerie DA
+                  Communication.
                 </p>
+                <a class="btn btn--ghost" target="_blank" rel="noopener"
+                   href="https://www.google.com/maps/search/?api=1&amp;query=Cocody+Rivera+2+imprimerie+DA+Communication+Abidjan">
+                  Ouvrir l'itinéraire dans Google Maps
+                </a>
               </div>
             </div>
 
@@ -1872,9 +1950,45 @@ def corps_accueil():
     )
 
 
+def blocs_valeurs():
+    return "\n".join(
+        """            <article class="carte">
+              <p class="carte__numero">%02d</p>
+              <h3>%s</h3>
+              <p class="tiny muted">%s</p>
+              <p class="tiny" style="color:var(--gold-ink);font-weight:600;margin-bottom:0">%s</p>
+            </article>""" % (i + 1, nom, definition, reference)
+        for i, (nom, definition, reference) in enumerate(VALEURS)
+    )
+
+
+def blocs_departements():
+    out = []
+    for nom, responsable, mission in DEPARTEMENTS:
+        resp = (
+            "Responsable : <strong>%s</strong>" % responsable
+            if responsable
+            else 'Responsable : %s' % m(AC, "à confirmer")
+        )
+        out.append(
+            """            <article class="carte">
+              <h3 style="font-size:1.08rem">%s</h3>
+              <p class="tiny muted">%s</p>
+              <p class="tiny mb-0">%s</p>
+            </article>""" % (nom, mission, resp)
+        )
+    return "\n".join(out)
+
+
 def corps_centre():
     return CORPS_CENTRE.substitute(
         fil=fil("Le Centre"),
+        vision=VISION,
+        mission=MISSION,
+        valeurs=blocs_valeurs(),
+        departements=blocs_departements(),
+        adresse=EGLISE["adresse"],
+        quartier=EGLISE["quartier"],
         pays=EGLISE["pays"],
         pasteur=PROPHETE["nom"],
         role=PROPHETE["role"],

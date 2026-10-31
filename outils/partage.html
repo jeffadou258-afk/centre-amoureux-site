@@ -10,22 +10,14 @@
   :root { --brand:#ED6C10; --brand2:#EF9C19; --brand3:#ED2727; }
   * { box-sizing: border-box; margin: 0; }
   html, body { width: 1200px; height: 630px; overflow: hidden; }
-  body {
-    font-family: "Inter", system-ui, sans-serif;
-    background: #140d06;
-    color: #fff;
-    position: relative;
-  }
+  body { font-family: "Inter", system-ui, sans-serif; background: #140d06; color: #fff; position: relative; }
   .halo {
-    position: absolute; inset: -55% -18% auto auto;
-    width: 900px; height: 900px;
+    position: absolute; inset: -55% -18% auto auto; width: 900px; height: 900px;
     background:
       radial-gradient(circle at 45% 45%, rgba(237,108,16,.45), transparent 58%),
       radial-gradient(circle at 70% 70%, rgba(239,156,25,.38), transparent 55%);
-    filter: blur(20px);
-    opacity: .85;
+    filter: blur(20px); opacity: .85;
   }
-  /* Voile sombre : garantit la lisibilité du titre et du pied sur le halo. */
   .voile {
     position: absolute; inset: 0;
     background:
@@ -39,32 +31,20 @@
     mask-image: radial-gradient(ellipse at 75% 20%, #000, transparent 70%);
   }
   .contenu {
-    position: relative;
-    height: 100%;
-    padding: 74px 80px;
+    position: relative; height: 100%; padding: 66px 80px;
     display: flex; flex-direction: column; justify-content: space-between;
   }
-  .marque { display: flex; align-items: center; gap: 18px; }
-  .tuile {
-    width: 62px; height: 62px; border-radius: 18px;
-    background: linear-gradient(145deg, var(--brand3), var(--brand) 50%, var(--brand2));
-    display: grid; place-items: center;
-    box-shadow: 0 18px 40px -16px rgba(237,108,16,.85);
-  }
-  .tuile span { font-family: "Fraunces", serif; font-size: 22px; font-weight: 600; }
-  .nom { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
-  .sous { font-size: 12px; font-weight: 600; letter-spacing: .22em; color: #EF9C19; text-transform: uppercase; margin-top: 4px; }
-  h1 {
-    font-family: "Fraunces", Georgia, serif;
-    font-size: 74px; line-height: 1.04; letter-spacing: -.025em;
-    font-weight: 600; max-width: 900px;
-  }
+  .marque { display: flex; align-items: center; gap: 20px; }
+  .marque img { height: 92px; width: auto; }
+  .nom { font-size: 23px; font-weight: 600; letter-spacing: -.01em; }
+  .sous { font-size: 12px; font-weight: 600; letter-spacing: .22em; color: #EF9C19; text-transform: uppercase; margin-top: 5px; }
+  h1 { font-family: "Fraunces", Georgia, serif; font-size: 72px; line-height: 1.05; letter-spacing: -.025em; font-weight: 600; max-width: 900px; }
   h1 em {
     font-style: normal;
     background: linear-gradient(100deg, #ED2727, #ED6C10 45%, #EF9C19);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .bas { display: flex; align-items: center; justify-content: space-between; font-size: 20px; color: rgba(255,255,255,.72); }
+  .bas { display: flex; align-items: center; justify-content: space-between; font-size: 19px; color: rgba(255,255,255,.78); }
   .barre { height: 4px; width: 100%; border-radius: 4px; background: linear-gradient(90deg,#ED2727,#ED6C10 45%,#EF9C19); margin-bottom: 26px; }
 </style>
 </head>
@@ -74,10 +54,10 @@
   <div class="grille"></div>
   <div class="contenu">
     <div class="marque">
-      <div class="tuile"><span>CAD</span></div>
+      <img src="../assets/img/logo-flamme.png" alt="">
       <div>
         <div class="nom">Centre des Amoureux de Dieu</div>
-        <div class="sous">Côte d'Ivoire</div>
+        <div class="sous">Cocody Rivera 2 · Abidjan</div>
       </div>
     </div>
     <div>
@@ -85,7 +65,7 @@
       <h1>Un lieu pour <em>aimer Dieu</em>, et être aimé de Lui.</h1>
     </div>
     <div class="bas">
-      <span>Cultes · Enseignements · Prière</span>
+      <span>Culte dimanche 14h – 18h30</span>
       <span>centre-des-amoureux.org</span>
     </div>
   </div>

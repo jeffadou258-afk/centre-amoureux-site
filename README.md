@@ -30,6 +30,21 @@ python3 outils/verifier-contrastes.py
 python3 outils/verifier-liens.py
 ```
 
+## Identité et coordonnées (fournies le 31/10/2026)
+
+| Élément | Valeur |
+|---|---|
+| Adresse | Cocody Rivera 2, en face de l'imprimerie DA Communication — Abidjan |
+| Culte | Dimanche 14h00 – 18h30 |
+| Culte de la Parole | Mercredi, une semaine sur deux, 19h00 – 21h00 |
+| Téléphone / WhatsApp | +225 07 87 59 32 89 |
+| Logo | flamme + colombe (détourée depuis la vidéo du Centre) → `assets/img/logo-flamme.png` |
+| Logo animé | `assets/img/logo-anime.mp4` (257 Ko, muet, boucle) |
+| Portraits | `assets/img/prophete-*.jpg` (filigrane retiré par recadrage) |
+
+Vision, mission, six valeurs et onze départements viennent du document de la
+direction (`Desktop/k/EMMANUEL KONAN.docx`), recopiés sans réécriture.
+
 ## Décisions du client (31/10/2026)
 
 1. **Palette orange conservée** (`#ED6C10` / `#EF9C19` / `#ED2727`) et non le
