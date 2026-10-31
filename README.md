@@ -1,5 +1,12 @@
 # Centre des Amoureux de Dieu — site officiel
 
+**En ligne :** https://jeffadou258-afk.github.io/centre-amoureux-site/
+
+> Publié par **GitHub Pages** (le dépôt est public : c'est la condition du
+> Pages gratuit). GitHub Pages ne permet pas d'en-têtes HTTP personnalisés :
+> la CSP de `vercel.json` ne s'y applique donc pas. Sur un hébergement qui
+> accepte les en-têtes (Vercel, Netlify, VPS), elle s'applique telle quelle.
+
 Site public du **Centre des Amoureux de Dieu** (Côte d'Ivoire).
 Statique, sans build, sans dépendance, sans back-end. Les formulaires ne
 stockent rien : ils composent un message dans la messagerie du visiteur.
