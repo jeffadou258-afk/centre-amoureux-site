@@ -44,7 +44,7 @@ EGLISE = {
     "facebook": AC,
     "instagram": AC,
     "tiktok": AC,
-    "annee_fondation": AC,
+    "annee_fondation": "octobre 2023",
     "site": "https://centre-des-amoureux.org",
 }
 
@@ -470,7 +470,7 @@ CORPS_ACCUEIL = Template("""    <main id="contenu">
         <div class="wrap">
           <div class="hero__grille">
             <div>
-              <p class="eyebrow monte">Église · Cocody Rivera 2, Abidjan</p>
+              <p class="eyebrow monte">Église · Abidjan · depuis octobre 2023</p>
               <h1 class="monte monte--2">
                 Un lieu pour <em>aimer Dieu</em>,<br>et être aimé de Lui.
               </h1>
@@ -755,12 +755,18 @@ $departements
           <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
             <div>
               <h2>Notre histoire</h2>
+              <p>
+                Le Centre des Amoureux de Dieu a été <strong>fondé en octobre
+                2023</strong>, à Abidjan (Cocody Rivera 2). Depuis, la communauté
+                se rassemble chaque dimanche et une semaine sur deux en milieu de
+                semaine, autour de la Parole, de la prière et du service.
+              </p>
               <div class="etat-vide" style="text-align:left">
-                <p class="mb-0">
-                  L'année de fondation et les étapes du développement du Centre
-                  seront publiées ici dès que la direction les aura communiquées.
-                  Aucun récit n'est inventé : cette page reste vide plutôt que
-                  remplie de faits non vérifiés.
+                <p class="tiny mb-0">
+                  Les étapes du développement du ministère — premiers cultes,
+                  ouvertures de départements, campagnes — seront ajoutées ici
+                  lorsque la direction les aura communiquées. Aucun récit n'est
+                  inventé.
                 </p>
               </div>
             </div>
