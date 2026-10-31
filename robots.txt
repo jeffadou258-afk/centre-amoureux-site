@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /outils/
+
+Sitemap: https://centre-des-amoureux.org/sitemap.xml
