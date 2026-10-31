@@ -3,3 +3,5 @@
 captures/
 node_modules/
 .vercel/
+admin/donnees/
+admin/.session-secret

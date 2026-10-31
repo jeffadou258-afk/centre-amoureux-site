@@ -13,6 +13,7 @@ en ligne ou les polices, et on ne le verrait qu'après le déploiement.
 import http.server
 import os
 import socketserver
+from http.server import ThreadingHTTPServer
 import sys
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -69,8 +70,9 @@ class Gestionnaire(http.server.SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("127.0.0.1", PORT), Gestionnaire) as httpd:
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    socketserver.ThreadingTCPServer.daemon_threads = True
+    with ThreadingHTTPServer(("127.0.0.1", PORT), Gestionnaire) as httpd:
         print("Site du Centre — http://127.0.0.1:%d/" % PORT)
         print("En-têtes de sécurité de vercel.json appliqués.")
         httpd.serve_forever()

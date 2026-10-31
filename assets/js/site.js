@@ -68,6 +68,51 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (!form.reportValidity()) return;
+
+      /* Si l'administration est branchée, le formulaire ENVOIE réellement.
+         Sinon il compose un message : il ne fait jamais semblant d'envoyer. */
+      var api = window.CAD_API || "";
+      var ressource = form.dataset.api;
+      var avisEnvoi = form.querySelector("[data-avis]");
+      if (api && ressource) {
+        var envoi = new FormData(form);
+        envoi.delete("consentement");
+        var bouton = form.querySelector('button[type="submit"]');
+        var libelle = bouton ? bouton.textContent : "";
+        if (bouton) {
+          bouton.disabled = true;
+          bouton.textContent = "Envoi en cours…";
+        }
+        fetch(api.replace(/\/$/, "") + "/api/" + ressource, { method: "POST", body: envoi })
+          .then(function (reponse) {
+            return reponse.json().catch(function () {
+              return { ok: false };
+            });
+          })
+          .then(function (reponse) {
+            if (!reponse.ok) throw new Error(reponse.erreur || "refus");
+            form.reset();
+            if (avisEnvoi) {
+              avisEnvoi.hidden = false;
+              avisEnvoi.textContent = "Message reçu. Il sera traité par l'équipe du Centre.";
+            }
+          })
+          .catch(function () {
+            if (avisEnvoi) {
+              avisEnvoi.hidden = false;
+              avisEnvoi.textContent =
+                "L'envoi a échoué. Réessayez dans un instant ; si cela persiste, écrivez à l'adresse indiquée.";
+            }
+          })
+          .then(function () {
+            if (bouton) {
+              bouton.disabled = false;
+              bouton.textContent = libelle;
+            }
+          });
+        return;
+      }
+
       var donnees = new FormData(form);
       var lignes = [];
       donnees.forEach(function (valeur, cle) {

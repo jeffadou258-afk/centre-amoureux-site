@@ -4,7 +4,7 @@ Fichier **généré** par `outils/generer.py` en relisant les pages réellement
 produites. Il liste chaque information encore marquée « à confirmer » (fond
 doré pointillé sur le site).
 
-Total : **13 marqueurs** sur le site.
+Total : **10 marqueurs** sur le site.
 
 ## 1. Identité et contacts
 
@@ -48,12 +48,6 @@ Total : **13 marqueurs** sur le site.
 - page à confirmer
 - compte à confirmer
 - compte à confirmer
-
-### `programmes.html`
-
-- à confirmer
-- à confirmer
-- à confirmer
 
 ## 4. Après réception
 

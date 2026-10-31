@@ -106,7 +106,7 @@
           <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
               <h2>Partager mon témoignage</h2>
-              <form class="formulaire" data-mailto="contact@centre-des-amoureux.org" data-sujet="Témoignage — site du Centre">
+              <form class="formulaire" data-mailto="contact@centre-des-amoureux.org" data-api="temoignage" data-sujet="Témoignage — site du Centre">
                 <div class="champ--duo">
                   <div class="champ">
                     <label for="t-nom">Nom ou pseudonyme</label>
@@ -119,7 +119,7 @@
                 </div>
                 <div class="champ">
                   <label for="t-texte">Votre témoignage</label>
-                  <textarea id="t-texte" name="temoignage" required minlength="40"></textarea>
+                  <textarea id="t-texte" name="texte" required minlength="40"></textarea>
                   <span class="aide">Racontez ce qui s'est passé, et ce que cela a changé pour vous.</span>
                 </div>
                 <div class="champ">
@@ -176,7 +176,8 @@
             <p class="eyebrow">Ils ont témoigné</p>
             <h2>Témoignages publiés</h2>
           </div>
-          <div class="etat-vide">
+          <div class="grille grille--2" data-temoignages hidden></div>
+          <div class="etat-vide" data-temoignages-vide>
             <h3>Aucun témoignage publié pour l'instant</h3>
             <p class="tiny mb-0">
               Les témoignages validés apparaîtront ici, avec l'identité choisie par
@@ -263,6 +264,8 @@
       </div>
     </footer>
 
+    <script src="assets/js/config.js" defer></script>
     <script src="assets/js/site.js" defer></script>
+    <script src="assets/js/donnees.js" defer></script>
   </body>
 </html>

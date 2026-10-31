@@ -182,38 +182,12 @@
               lieu, informations pratiques, inscription si nécessaire.
             </p>
           </div>
-          <div class="agenda">
-            <div class="agenda__item">
-              <span class="agenda__quand">Chaque mois</span>
-              <div>
-                <strong>Veillée de prière</strong>
-                <p class="tiny muted mb-0">Date et thème communiqués par le secrétariat.</p>
-              </div>
-              <span class="tiny message"><span class="a-completer" data-a-completer="1" title="Information à fournir par le Centre">à confirmer</span></span>
-            </div>
-            <div class="agenda__item">
-              <span class="agenda__quand">Périodique</span>
-              <div>
-                <strong>Séminaires et enseignements thématiques</strong>
-                <p class="tiny muted mb-0">Programme détaillé à publier.</p>
-              </div>
-              <span class="tiny"><span class="a-completer" data-a-completer="1" title="Information à fournir par le Centre">à confirmer</span></span>
-            </div>
-            <div class="agenda__item">
-              <span class="agenda__quand">Annuel</span>
-              <div>
-                <strong>Convention / campagne spirituelle</strong>
-                <p class="tiny muted mb-0">Annonce officielle à venir.</p>
-              </div>
-              <span class="tiny"><span class="a-completer" data-a-completer="1" title="Information à fournir par le Centre">à confirmer</span></span>
-            </div>
-          </div>
-
-          <div class="etat-vide espace-haut">
-            <h3>Le calendrier détaillé</h3>
+          <div class="agenda" data-agenda hidden></div>
+          <div class="etat-vide" data-agenda-vide>
+            <h3>Aucune affiche publiée pour l'instant</h3>
             <p class="tiny mb-0">
-              Aucun événement daté n'est publié pour l'instant : le calendrier sera
-              rempli dès réception des dates officielles. Aucune date n'est inventée.
+              Le secrétariat publie ici les veillées, séminaires, conventions et
+              campagnes, avec leur affiche, dès qu'elles sont programmées.
             </p>
           </div>
         </div>
@@ -317,6 +291,8 @@
       </div>
     </footer>
 
+    <script src="assets/js/config.js" defer></script>
     <script src="assets/js/site.js" defer></script>
+    <script src="assets/js/donnees.js" defer></script>
   </body>
 </html>

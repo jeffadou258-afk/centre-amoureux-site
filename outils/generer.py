@@ -399,7 +399,9 @@ $corps
       </div>
     </footer>
 
+    <script src="${prefixe}assets/js/config.js" defer></script>
     <script src="${prefixe}assets/js/site.js" defer></script>
+    <script src="${prefixe}assets/js/donnees.js" defer></script>
   </body>
 </html>
 """)
@@ -1009,38 +1011,12 @@ $creneaux
               lieu, informations pratiques, inscription si nécessaire.
             </p>
           </div>
-          <div class="agenda">
-            <div class="agenda__item">
-              <span class="agenda__quand">Chaque mois</span>
-              <div>
-                <strong>Veillée de prière</strong>
-                <p class="tiny muted mb-0">Date et thème communiqués par le secrétariat.</p>
-              </div>
-              <span class="tiny message">$aConfirmer</span>
-            </div>
-            <div class="agenda__item">
-              <span class="agenda__quand">Périodique</span>
-              <div>
-                <strong>Séminaires et enseignements thématiques</strong>
-                <p class="tiny muted mb-0">Programme détaillé à publier.</p>
-              </div>
-              <span class="tiny">$aConfirmer</span>
-            </div>
-            <div class="agenda__item">
-              <span class="agenda__quand">Annuel</span>
-              <div>
-                <strong>Convention / campagne spirituelle</strong>
-                <p class="tiny muted mb-0">Annonce officielle à venir.</p>
-              </div>
-              <span class="tiny">$aConfirmer</span>
-            </div>
-          </div>
-
-          <div class="etat-vide espace-haut">
-            <h3>Le calendrier détaillé</h3>
+          <div class="agenda" data-agenda hidden></div>
+          <div class="etat-vide" data-agenda-vide>
+            <h3>Aucune affiche publiée pour l'instant</h3>
             <p class="tiny mb-0">
-              Aucun événement daté n'est publié pour l'instant : le calendrier sera
-              rempli dès réception des dates officielles. Aucune date n'est inventée.
+              Le secrétariat publie ici les veillées, séminaires, conventions et
+              campagnes, avec leur affiche, dès qu'elles sont programmées.
             </p>
           </div>
         </div>
@@ -1171,6 +1147,12 @@ $puces
 $galerie
           </div>
 
+          <div class="section__entete espace-haut">
+            <p class="eyebrow">Affiches</p>
+            <h2>Affiches des veillées et événements</h2>
+          </div>
+          <div class="galerie" data-affiches hidden></div>
+
           <div class="etat-vide espace-haut">
             <h3>Albums photographiques à venir</h3>
             <p class="tiny mb-0">
@@ -1228,7 +1210,7 @@ $fil
           <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
               <h2>Partager mon témoignage</h2>
-              <form class="formulaire" data-mailto="$email" data-sujet="Témoignage — site du Centre">
+              <form class="formulaire" data-mailto="$email" data-api="temoignage" data-sujet="Témoignage — site du Centre">
                 <div class="champ--duo">
                   <div class="champ">
                     <label for="t-nom">Nom ou pseudonyme</label>
@@ -1241,7 +1223,7 @@ $fil
                 </div>
                 <div class="champ">
                   <label for="t-texte">Votre témoignage</label>
-                  <textarea id="t-texte" name="temoignage" required minlength="40"></textarea>
+                  <textarea id="t-texte" name="texte" required minlength="40"></textarea>
                   <span class="aide">Racontez ce qui s'est passé, et ce que cela a changé pour vous.</span>
                 </div>
                 <div class="champ">
@@ -1298,7 +1280,8 @@ $fil
             <p class="eyebrow">Ils ont témoigné</p>
             <h2>Témoignages publiés</h2>
           </div>
-          <div class="etat-vide">
+          <div class="grille grille--2" data-temoignages hidden></div>
+          <div class="etat-vide" data-temoignages-vide>
             <h3>Aucun témoignage publié pour l'instant</h3>
             <p class="tiny mb-0">
               Les témoignages validés apparaîtront ici, avec l'identité choisie par
@@ -1333,7 +1316,7 @@ $fil
           <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
             <div>
               <h2>Écrire une demande</h2>
-              <form class="formulaire" data-mailto="$email" data-sujet="Demande de prière — site du Centre">
+              <form class="formulaire" data-mailto="$email" data-api="priere" data-sujet="Demande de prière — site du Centre">
                 <div class="champ--duo">
                   <div class="champ">
                     <label for="p-nom">Nom ou pseudonyme</label>
