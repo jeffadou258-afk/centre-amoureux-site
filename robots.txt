@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /outils/
 
-Sitemap: https://centre-des-amoureux.org/sitemap.xml
+Sitemap: https://jeffadou258-afk.github.io/centre-amoureux-site/sitemap.xml

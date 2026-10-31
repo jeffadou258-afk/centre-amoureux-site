@@ -45,7 +45,9 @@ EGLISE = {
     "instagram": AC,
     "tiktok": AC,
     "annee_fondation": "octobre 2023",
-    "site": "https://centre-des-amoureux.org",
+    # Adresse de publication actuelle. Le jour où le domaine est acheté,
+    # remplacer par "https://centre-des-amoureux.org" puis régénérer.
+    "site": "https://jeffadou258-afk.github.io/centre-amoureux-site",
 }
 
 # Décision du client (31/10/2026) : le pasteur du Centre est Daniel Jeff Adou.
