@@ -42,13 +42,14 @@ export default async function PagePredication({ params }: Params) {
 
   return (
     <>
-      <section className="bg-nuit text-sur-nuit">
-        <Conteneur className="flex flex-col gap-6 pb-12 pt-8">
+      <section className="relative overflow-hidden bg-nuit text-sur-nuit">
+        <div className="braises opacity-70" aria-hidden="true" />
+        <Conteneur className="entree relative flex flex-col gap-6 pb-12 pt-8">
           <Link href="/predications" className="text-sm font-bold text-or">← Toutes les prédications</Link>
           <LecteurYoutube id={p.youtube_id} titre={p.titre} vignette={p.vignette} />
           <div className="flex flex-col gap-3">
             <Surtitre surNuit>{p.type} · {dateLongue(p.date)}{p.serie ? ` · Série « ${p.serie} »` : ""}</Surtitre>
-            <h1 className="m-0 font-titre text-[clamp(2rem,4vw,3.25rem)] font-black uppercase leading-none tracking-[-0.02em]">{p.titre}</h1>
+            <h1 className="m-0 font-titre text-[clamp(1.6rem,3.4vw,2.5rem)] font-bold leading-[1.1]">{p.titre}</h1>
             <p className="m-0 text-creme">{p.orateur}</p>
           </div>
         </Conteneur>
@@ -73,7 +74,7 @@ export default async function PagePredication({ params }: Params) {
       {autres.length > 0 && (
         <section className="bg-sable">
           <Conteneur className="flex flex-col gap-6 py-14">
-            <h2 className="m-0 font-titre text-2xl font-black uppercase">{p.serie ? "Dans la même série" : "À écouter aussi"}</h2>
+            <h2 className="m-0 font-titre text-2xl font-bold">{p.serie ? "Dans la même série" : "À écouter aussi"}</h2>
             <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
               {autres.map((x) => <CartePredication key={x.slug} p={x} />)}
             </div>

@@ -29,10 +29,10 @@ npm run build && npm start     # production
 npm run typecheck && npm run lint && npm test
 ```
 
-## Vérifié le 31/10/2026
+## Vérifié le 01/11/2026 (version 2 : design dynamique)
 
 - Types, lint : sans erreur. 16 tests unitaires.
-- 47 vérifications de parcours (Playwright, ordinateur 1440 px et téléphone
+- 47 vérifications de parcours (toutes réussies) (Playwright, ordinateur 1440 px et téléphone
   390 px) : 28 pages sans erreur console, sans débordement, sans requête
   externe ; filtre et recherche ; lecteur YouTube chargé au clic seulement ;
   formulaires (validation, échec honnête sans API, texte conservé) ;

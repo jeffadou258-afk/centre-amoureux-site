@@ -17,27 +17,27 @@ export function PiedDePage({ site }: { site: Site }) {
           <p className="m-0">Une maison de prière, de Parole et d’amour fraternel, ouverte à tous.</p>
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.1em] text-sur-nuit">Nous trouver</h2>
+          <h2 className="m-0 mb-1 text-xs font-semibold text-sur-nuit">Nous trouver</h2>
           <p className="m-0">{site.adresse}, {site.ville}</p>
-          <a href={`tel:${site.telephone.replace(/\s/g, "")}`} className="text-creme">{site.telephone}</a>
+          <a href={`tel:${site.telephone.replace(/\s/g, "")}`} className="inline-block py-0.5 text-creme">{site.telephone}</a>
           {site.horaires.map((h) => (
             <p key={h.jour} className="m-0">{h.jour} : {h.heures}</p>
           ))}
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.1em] text-sur-nuit">Le Centre</h2>
-          <Link href="/le-centre" className="text-creme">Qui sommes-nous</Link>
-          <Link href="/le-prophete" className="text-creme">Le Prophète</Link>
-          <Link href="/programmes" className="text-creme">Programmes</Link>
-          <Link href="/predications" className="text-creme">Prédications</Link>
-          <Link href="/dons" className="text-creme">Faire un don</Link>
+          <h2 className="m-0 mb-1 text-xs font-semibold text-sur-nuit">Le Centre</h2>
+          <Link href="/le-centre" className="inline-block py-0.5 text-creme">Qui sommes-nous</Link>
+          <Link href="/le-prophete" className="inline-block py-0.5 text-creme">Le Prophète</Link>
+          <Link href="/programmes" className="inline-block py-0.5 text-creme">Programmes</Link>
+          <Link href="/predications" className="inline-block py-0.5 text-creme">Prédications</Link>
+          <Link href="/dons" className="inline-block py-0.5 text-creme">Faire un don</Link>
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.1em] text-sur-nuit">Suivre</h2>
-          <a href={site.youtube} target="_blank" rel="noopener" className="text-creme">Chaîne YouTube du ministère</a>
+          <h2 className="m-0 mb-1 text-xs font-semibold text-sur-nuit">Suivre</h2>
+          <a href={site.youtube} target="_blank" rel="noopener" className="inline-block py-0.5 text-creme">Chaîne YouTube du ministère</a>
           {reseaux.map((r) =>
             r.url ? (
-              <a key={r.nom} href={r.url} target="_blank" rel="noopener" className="text-creme">{r.nom}</a>
+              <a key={r.nom} href={r.url} target="_blank" rel="noopener" className="inline-block py-0.5 text-creme">{r.nom}</a>
             ) : (
               <span key={r.nom}>{r.nom} : <AConfirmer /></span>
             ),

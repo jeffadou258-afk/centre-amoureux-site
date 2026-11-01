@@ -30,11 +30,11 @@ export function MenuMobile({ liens }: { liens: { href: string; libelle: string }
         </svg>
       </button>
       {ouvert && (
-        <nav id="menu-principal" aria-label="Navigation principale" className="absolute inset-x-0 top-[72px] z-40 border-t border-nuit-ligne bg-nuit px-5 pb-6">
+        <nav id="menu-principal" style={{ ["--d" as string]: "0ms" }} aria-label="Navigation principale" className="entree absolute inset-x-0 top-full z-40 border-t border-nuit-ligne bg-nuit px-5 pb-6 shadow-2xl">
           <ul className="m-0 list-none p-0">
             {liens.map((l) => (
               <li key={l.href} className="border-b border-nuit-ligne">
-                <Link href={l.href} className="flex min-h-[52px] items-center text-lg font-bold text-sur-nuit no-underline">{l.libelle}</Link>
+                <Link href={l.href} className="flex min-h-[50px] items-center text-[15px] font-semibold text-sur-nuit no-underline">{l.libelle}</Link>
               </li>
             ))}
           </ul>

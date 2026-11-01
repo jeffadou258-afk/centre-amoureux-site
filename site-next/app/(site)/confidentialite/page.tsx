@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Confidentialité" };
 
 export default async function PageConfidentialite() {
   const site = await getSite();
-  const h2 = "text-xl font-extrabold text-encre";
+  const h2 = "text-lg font-bold text-encre";
   return (
     <>
       <BandeauPage surtitre="Données personnelles" titre="Confidentialité" />

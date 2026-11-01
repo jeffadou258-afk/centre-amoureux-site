@@ -11,11 +11,12 @@ export default async function PageProphete() {
   const [predications, site] = await Promise.all([getPredications(), getSite()]);
   return (
     <>
-      <section className="bg-nuit text-sur-nuit">
-        <Conteneur className="grid items-center gap-12 pb-16 pt-10 md:grid-cols-2">
+      <section className="relative overflow-hidden bg-nuit text-sur-nuit">
+        <div className="braises opacity-70" aria-hidden="true" />
+        <Conteneur className="entree relative grid items-center gap-12 pb-16 pt-10 md:grid-cols-2">
           <div className="flex flex-col gap-5">
             <Surtitre surNuit>Le Prophète</Surtitre>
-            <h1 className="m-0 font-titre text-[clamp(2.75rem,5.5vw,4.75rem)] font-black uppercase leading-[0.95] tracking-[-0.02em]">{PROPHETE.nomCourt}</h1>
+            <h1 className="m-0 font-titre text-[clamp(1.85rem,4.4vw,3rem)] font-bold leading-[1.05]">{PROPHETE.nomCourt}</h1>
             <p className="m-0 text-lg text-creme">{PROPHETE.role}</p>
             <Bouton href={site.youtube} externe variante="contour-nuit" grand>Voir sa chaîne YouTube</Bouton>
           </div>
@@ -24,7 +25,7 @@ export default async function PageProphete() {
       </section>
       <Conteneur className="flex flex-col gap-16 pb-24 pt-14">
         <section className="grid gap-10 lg:grid-cols-2">
-          <div className="flex flex-col gap-4 text-[17px] leading-[1.7] text-texte-2">
+          <div className="flex flex-col gap-4 text-[15px] leading-[1.7] text-texte-2">
             <p className="m-0">Le Centre des Amoureux de Dieu est conduit par le {PROPHETE.nom}. Son enseignement est diffusé chaque semaine sur la chaîne du ministère, et porte une conviction simple : la Parole de Dieu éclaire la vie réelle, ici et maintenant.</p>
             <p className="m-0">Sa prédication insiste sur l’amour de Dieu, la vie de prière et la transformation du cœur, trois axes que l’on retrouve dans les messages publiés.</p>
             <p className="m-0 text-[15px]">Biographie officielle et parcours ministériel : <AConfirmer>texte à fournir par le Centre</AConfirmer></p>
@@ -36,14 +37,14 @@ export default async function PageProphete() {
               ["La transformation", "Passer de l’émotion du moment à un changement durable."],
             ].map(([titre, texte], i) => (
               <li key={titre} className="grid grid-cols-[48px_1fr] gap-3 border-b border-ligne py-5">
-                <span className="font-titre text-sm font-extrabold text-flamme-encre">0{i + 1}</span>
-                <span className="flex flex-col gap-1"><span className="font-titre text-xl font-extrabold">{titre}</span><span className="text-texte-2">{texte}</span></span>
+                <span className="font-titre text-sm font-bold text-flamme-encre">0{i + 1}</span>
+                <span className="flex flex-col gap-1"><span className="font-titre text-lg font-bold">{titre}</span><span className="text-texte-2">{texte}</span></span>
               </li>
             ))}
           </ol>
         </section>
         <section className="flex flex-col gap-6">
-          <h2 className="m-0 font-titre text-3xl font-black uppercase">Ses derniers messages</h2>
+          <h2 className="m-0 font-titre text-2xl font-bold">Ses derniers messages</h2>
           <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
             {predications.slice(0, 3).map((p) => <CartePredication key={p.slug} p={p} />)}
           </div>

@@ -2,12 +2,15 @@ import { Conteneur, Surtitre } from "@/components/ui";
 
 export function BandeauPage({ surtitre, titre, texte, children }: { surtitre: string; titre: string; texte?: string; children?: React.ReactNode }) {
   return (
-    <section className="bg-nuit text-sur-nuit">
-      <Conteneur className="flex flex-col gap-4 pb-12 pt-10">
-        <Surtitre surNuit>{surtitre}</Surtitre>
-        <h1 className="m-0 font-titre text-[clamp(2.1rem,8vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] [overflow-wrap:anywhere] hyphens-auto">{titre}</h1>
-        {texte && <p className="m-0 max-w-[40em] text-[17px] leading-relaxed text-creme">{texte}</p>}
-        {children}
+    <section className="relative overflow-hidden bg-nuit text-sur-nuit">
+      <div className="braises opacity-70" aria-hidden="true" />
+      <Conteneur className="relative flex flex-col gap-4 pb-14 pt-12">
+        <div className="entree" style={{ ["--d" as string]: "0ms" }}><Surtitre surNuit>{surtitre}</Surtitre></div>
+        <h1 className="m-0 max-w-[20em] text-[clamp(1.85rem,4.4vw,3rem)] font-bold leading-[1.05] [overflow-wrap:anywhere] hyphens-auto">
+          <span className="ligne-titre"><span>{titre}</span></span>
+        </h1>
+        {texte && <p className="entree m-0 max-w-[38em] text-base leading-relaxed text-creme" style={{ ["--d" as string]: "350ms" }}>{texte}</p>}
+        {children && <div className="entree" style={{ ["--d" as string]: "500ms" }}>{children}</div>}
       </Conteneur>
     </section>
   );

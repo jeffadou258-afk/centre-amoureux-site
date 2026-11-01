@@ -38,7 +38,7 @@ function Retour({ etat, whatsapp, succes }: { etat: EtatEnvoi; whatsapp: string;
   if (etat.statut === "non-branche" || etat.statut === "echec") {
     return (
       <div role="alert" className="flex flex-col gap-2 rounded-2xl border border-[#F3B9B3] bg-[#FDECEA] p-5">
-        <span className="font-extrabold text-[#8A1C14]">L’envoi n’a pas abouti.</span>
+        <span className="font-bold text-[#8A1C14]">L’envoi n’a pas abouti.</span>
         <span className="text-sm leading-normal text-texte-2">{etat.message}</span>
         <a href={whatsapp} target="_blank" rel="noopener" className="self-start font-bold">Écrire sur WhatsApp →</a>
       </div>
@@ -99,7 +99,7 @@ export function FormulairePriere({ whatsapp }: { whatsapp: string }) {
       </label>
       <Erreur id="p-consentement-err" message={e.consentement} />
       <AntiRobot />
-      <button type="submit" disabled={enCours} className="min-h-14 rounded-full border-0 bg-flamme text-[17px] font-extrabold text-sur-flamme disabled:opacity-60">
+      <button type="submit" disabled={enCours} className="min-h-14 rounded-full border-0 bg-flamme text-[15px] font-bold text-sur-flamme disabled:opacity-60">
         {enCours ? "Envoi…" : "Envoyer ma demande"}
       </button>
       <Retour etat={etat} whatsapp={whatsapp} succes="" />
@@ -143,7 +143,7 @@ export function FormulaireTemoignage({ whatsapp }: { whatsapp: string }) {
       </label>
       <Erreur id="t-consentement-err" message={e.consentement_publication} />
       <AntiRobot />
-      <button type="submit" disabled={enCours} className="min-h-14 rounded-full border-0 bg-flamme text-[17px] font-extrabold text-sur-flamme disabled:opacity-60">
+      <button type="submit" disabled={enCours} className="min-h-14 rounded-full border-0 bg-flamme text-[15px] font-bold text-sur-flamme disabled:opacity-60">
         {enCours ? "Envoi…" : "Envoyer mon témoignage"}
       </button>
       <Retour etat={etat} whatsapp={whatsapp} succes="" />
@@ -163,7 +163,7 @@ export function FormulaireDon({ whatsapp }: { whatsapp: string }) {
   return (
     <form action={action} noValidate className="flex flex-col gap-6">
       <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
-        <legend className="mb-2 text-base font-extrabold">1. Pour quoi donnez-vous ?</legend>
+        <legend className="mb-2 text-base font-bold">1. Pour quoi donnez-vous ?</legend>
         <div className="grid grid-cols-3 gap-2">
           {affectations.map(([val, lib]) => (
             <label key={val} className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-[1.5px] border-[#D4C6B6] bg-white text-sm font-bold has-[:checked]:border-encre has-[:checked]:bg-encre has-[:checked]:text-ivoire has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-or">
@@ -173,12 +173,12 @@ export function FormulaireDon({ whatsapp }: { whatsapp: string }) {
         </div>
       </fieldset>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="d-montant" className="text-base font-extrabold">2. Montant (FCFA)</label>
-        <input id="d-montant" name="montant" inputMode="numeric" autoComplete="off" placeholder="Ex. : 5 000" defaultValue={v.montant} aria-invalid={!!e.montant} className={`${champ} text-[17px] ${e.montant ? champErreur : ""}`} />
+        <label htmlFor="d-montant" className="text-base font-bold">2. Montant (FCFA)</label>
+        <input id="d-montant" name="montant" inputMode="numeric" autoComplete="off" placeholder="Ex. : 5 000" defaultValue={v.montant} aria-invalid={!!e.montant} className={`${champ} text-[15px] ${e.montant ? champErreur : ""}`} />
         <Erreur id="d-montant-err" message={e.montant} />
       </div>
       <fieldset className="m-0 flex flex-col gap-2.5 border-0 p-0">
-        <legend className="mb-2 text-base font-extrabold">3. Moyen de paiement</legend>
+        <legend className="mb-2 text-base font-bold">3. Moyen de paiement</legend>
         {moyens.map((m) => (
           <label key={m} className="flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border-[1.5px] border-[#D4C6B6] bg-white px-4 font-bold has-[:checked]:border-2 has-[:checked]:border-flamme">
             <input type="radio" name="moyen" value={m} defaultChecked={(v.moyen ?? "Wave") === m} className="h-5 w-5 accent-[#A64C0B]" /> {m}
@@ -192,7 +192,7 @@ export function FormulaireDon({ whatsapp }: { whatsapp: string }) {
         <Erreur id="d-email-err" message={e.email} />
       </div>
       <AntiRobot />
-      <button type="submit" disabled={enCours} className="min-h-14 rounded-full border-0 bg-flamme text-[17px] font-extrabold text-sur-flamme disabled:opacity-60">
+      <button type="submit" disabled={enCours} className="min-h-14 rounded-full border-0 bg-flamme text-[15px] font-bold text-sur-flamme disabled:opacity-60">
         {enCours ? "Préparation…" : "Continuer vers le paiement sécurisé"}
       </button>
       <p className="m-0 flex items-start gap-2 text-[13px] leading-normal text-gris">

@@ -57,21 +57,6 @@ export const VALEURS = [
   { nom: "Excellence", definition: "Poursuivre la qualité et la diligence dans tout ce que nous faisons pour glorifier Dieu.", reference: "Colossiens 3 : 23" },
 ] as const;
 
-/** Responsable `null` = non encore communiqué par le Centre. */
-export const DEPARTEMENTS: { nom: string; responsable: string | null; role: string }[] = [
-  { nom: "Accueil des nouveaux", responsable: "Koffi Prisca", role: "Prise en charge des nouveaux et des visiteurs, orientation vers les cellules et le pasteur." },
-  { nom: "Sentinelles (intercession)", responsable: null, role: "Couvre l’église en prière, intercède avant et pendant chaque culte." },
-  { nom: "La Voix des Chérubins (chantres)", responsable: "Lilian Armoo", role: "Prépare l’atmosphère spirituelle : louange, adoration, répétitions." },
-  { nom: "Médias", responsable: "N’Taye Daniel", role: "Sonorisation, captation, diffusion en direct, réseaux sociaux et visuels." },
-  { nom: "Gagneurs d’âmes (évangélisation)", responsable: "Carmel Yao", role: "Sorties d’évangélisation, campagnes et suivi des nouveaux convertis." },
-  { nom: "Accueil général", responsable: "Marylène", role: "Accueil à l’entrée, placement, ordre et propreté du lieu." },
-  { nom: "Gestion des cultes", responsable: null, role: "Coordonne le programme du culte et les plannings des intervenants." },
-  { nom: "Trésorerie", responsable: null, role: "Dîmes, offrandes, comptabilité et rapports au pasteur." },
-  { nom: "Secrétariat", responsable: null, role: "Documents, courriers, plannings et comptes rendus de réunions." },
-  { nom: "Moyens généraux", responsable: "Kossonou Léon", role: "Logistique matérielle : chaises, tentes, eau, entretien." },
-  { nom: "Services d’ordre", responsable: null, role: "Sécurité des lieux, maintien de l’ordre et gestion des flux." },
-];
-
 const ORATEUR = "Prophète Daniel Jeff Adou";
 const v = (id: string) => `/img/predications/${id}.jpg`;
 

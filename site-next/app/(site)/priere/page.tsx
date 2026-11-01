@@ -16,7 +16,7 @@ export default async function PagePriere() {
       <Conteneur className="grid gap-12 pb-24 pt-10 lg:grid-cols-[minmax(0,640px)_1fr]">
         <FormulairePriere whatsapp={lienWhatsApp(site.whatsapp, "Bonjour, je souhaite confier une demande de prière.")} />
         <aside className="flex flex-col gap-4">
-          <blockquote className="m-0 font-verset text-[26px] italic leading-snug">
+          <blockquote className="m-0 font-verset text-lg italic leading-snug">
             « Car là où deux ou trois sont assemblés en mon nom, je suis au milieu d’eux. »
             <footer className="mt-2 font-texte text-[13px] font-bold not-italic tracking-[0.1em] text-flamme-encre">MATTHIEU 18 : 20</footer>
           </blockquote>

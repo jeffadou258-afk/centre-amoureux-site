@@ -38,12 +38,13 @@ export default async function PagePredications({ searchParams }: { searchParams:
 
   return (
     <>
-      <section className="bg-nuit text-sur-nuit">
-        <Conteneur className="grid items-center gap-12 pb-14 pt-10 md:grid-cols-2">
+      <section className="relative overflow-hidden bg-nuit text-sur-nuit">
+        <div className="braises opacity-70" aria-hidden="true" />
+        <Conteneur className="entree relative grid items-center gap-12 pb-14 pt-10 md:grid-cols-2">
           <div className="flex flex-col gap-4">
             <Surtitre surNuit>Prédications et enseignements</Surtitre>
-            <h1 className="m-0 font-titre text-[clamp(2.75rem,5vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.02em]">La Parole, chaque semaine</h1>
-            <p className="m-0 text-[17px] leading-relaxed text-creme">Les messages du Prophète Daniel Jeff Adou, à regarder, écouter et partager.</p>
+            <h1 className="m-0 font-titre text-[clamp(1.85rem,4.4vw,3rem)] font-bold leading-[1.05]">La Parole, chaque semaine</h1>
+            <p className="m-0 text-[15px] leading-relaxed text-creme">Les messages du Prophète Daniel Jeff Adou, à regarder, écouter et partager.</p>
           </div>
           {recente && <CartePredicationVedette p={recente} surNuit={false} />}
         </Conteneur>
@@ -79,8 +80,8 @@ export default async function PagePredications({ searchParams }: { searchParams:
             return (
               <section key={serie} aria-labelledby={`serie-${serie}`} className="grid items-center gap-6 rounded-3xl bg-sable p-7 lg:grid-cols-3">
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-flamme-encre">Série · {parties.length} messages</span>
-                  <h2 id={`serie-${serie}`} className="m-0 font-titre text-[32px] font-black uppercase leading-none">{serie}</h2>
+                  <span className="text-xs font-bold text-flamme-encre">Série · {parties.length} messages</span>
+                  <h2 id={`serie-${serie}`} className="m-0 font-titre text-[32px] font-bold leading-none">{serie}</h2>
                 </div>
                 {parties.map((p) => (
                   <Link key={p.slug} href={`/predications/${p.slug}`} className="grid grid-cols-[140px_1fr] items-center gap-3.5 rounded-2xl bg-ivoire p-2.5 text-encre no-underline hover:bg-white">
