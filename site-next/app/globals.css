@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Identité « Le feu et la Parole » — couleurs du logo, contrastes mesurés (WCAG AA). */
+@theme {
+  --color-flamme: #ED6C10;        /* surfaces : boutons, accents (texte sombre dessus : 6,1:1) */
+  --color-or: #EF9C19;            /* surtitres sur fond nuit (8,7:1) */
+  --color-braise: #ED2727;        /* filet de marque uniquement, jamais du texte */
+  --color-flamme-encre: #A64C0B;  /* texte orange sur fond clair (5,4:1) */
+  --color-sur-flamme: #1A0E05;
+  --color-nuit: #120C08;
+  --color-nuit-2: #1C1612;
+  --color-nuit-ligne: #2E241C;
+  --color-bordure-nuit: #6B5D50;
+  --color-sur-nuit: #F7F1E8;
+  --color-creme: #D9CDBF;
+  --color-gris-clair: #BDB1A3;
+  --color-ivoire: #FBF7F1;
+  --color-sable: #F3ECE2;
+  --color-ligne: #E6DCCF;
+  --color-pointille: #C9B8A3;
+  --color-encre: #171717;
+  --color-texte-2: #3A322B;
+  --color-gris: #5C534B;
+  --color-champ: #8A8A8A;
+
+  --font-titre: "Archivo Variable", "Arial Narrow", sans-serif;
+  --font-texte: "Manrope Variable", system-ui, sans-serif;
+  --font-verset: "Instrument Serif", Georgia, serif;
+}
+
+/* Styles de base DANS la couche « base » : les classes utilitaires (boutons,
+   liens du menu…) doivent toujours pouvoir les remplacer. Hors couche, la règle
+   des liens écrasait la couleur du texte des boutons (orange sur orange). */
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--color-ivoire);
+    color: var(--color-encre);
+    font-family: var(--font-texte);
+    text-rendering: optimizeLegibility;
+  }
+  a { color: var(--color-flamme-encre); }
+  a:hover { color: #7A3807; }
+  /* Un lien au milieu d'un texte doit se voir autrement que par sa couleur (WCAG 1.4.1). */
+  p a, li a, blockquote a, label a { text-decoration: underline; text-underline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--color-or); outline-offset: 3px; border-radius: 6px; }
+}
+
+.filet-marque { height: 3px; background: linear-gradient(90deg, #EF9C19, #ED6C10 45%, #ED2727); }
+.a-confirmer {
+  background: repeating-linear-gradient(135deg, #FFF4E0 0 8px, #FFF8EC 8px 16px);
+  border: 1px dashed #C99A3E;
+  border-radius: 6px;
+  padding: 0 6px;
+  color: #6B4A0E;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
