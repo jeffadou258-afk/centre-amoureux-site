@@ -1,14 +1,15 @@
 /* Inscription au jeûne de novembre 2026.
+   Valider = entrer dans le groupe WhatsApp du jeûne.
    - Si la base Supabase du site est configurée (assets/js/config.js),
-     l'inscription est ENREGISTRÉE dans la table inscriptions_jeune.
-   - Sinon, le formulaire prépare un message WhatsApp vers le Centre :
-     il ne fait jamais semblant d'enregistrer.
-   Dans les deux cas, le bouton du groupe WhatsApp apparaît ensuite. */
+     l'inscription est d'abord ENREGISTRÉE (table inscriptions_jeune),
+     puis le visiteur est conduit dans le groupe.
+   - Sinon, le visiteur est conduit directement dans le groupe. */
 (function () {
   "use strict";
   var form = document.getElementById("form-jeune");
   if (!form) return;
   var groupe = document.getElementById("jeune-groupe");
+  var lien = document.getElementById("lien-groupe");
   var avis = form.querySelector("[data-avis]");
   var bouton = form.querySelector('button[type="submit"]');
   var conf = window.CAD_SUPABASE || {};
@@ -17,9 +18,9 @@
     avis.hidden = false;
     avis.textContent = texte;
   }
-  function montrerGroupe() {
-    groupe.hidden = false;
-    groupe.scrollIntoView({ behavior: "smooth", block: "center" });
+  function entrerDansLeGroupe() {
+    groupe.hidden = false; /* bouton de secours si WhatsApp ne s'ouvre pas */
+    window.location.href = lien.href;
   }
   function nettoyer(v) {
     return String(v || "").replace(/\s+/g, " ").trim();
@@ -38,51 +39,45 @@
       consentement: true
     };
 
-    if (conf.url && conf.anonKey) {
-      var libelle = bouton.textContent;
-      bouton.disabled = true;
-      bouton.textContent = "Enregistrement…";
-      fetch(conf.url.replace(/\/$/, "") + "/rest/v1/inscriptions_jeune", {
-        method: "POST",
-        headers: {
-          apikey: conf.anonKey,
-          Authorization: "Bearer " + conf.anonKey,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal"
-        },
-        body: JSON.stringify(ligne)
-      })
-        .then(function (r) {
-          if (r.status === 201) {
-            form.reset();
-            dire("Merci " + ligne.prenom + ", votre inscription est enregistrée.");
-            montrerGroupe();
-          } else if (r.status === 409) {
-            dire("Ce numéro est déjà inscrit au jeûne. Il ne vous reste qu'à rejoindre le groupe.");
-            montrerGroupe();
-          } else {
-            throw new Error("refus " + r.status);
-          }
-        })
-        .catch(function () {
-          dire("L'inscription n'a pas pu être enregistrée. Réessayez dans un instant ou contactez le +225 07 87 59 32 89.");
-        })
-        .then(function () {
-          bouton.disabled = false;
-          bouton.textContent = libelle;
-        });
+    if (!(conf.url && conf.anonKey)) {
+      dire("Merci " + ligne.prenom + " ! Ouverture du groupe WhatsApp du jeûne…");
+      entrerDansLeGroupe();
       return;
     }
 
-    /* Pas de base branchée : message WhatsApp pré-rempli vers le Centre. */
-    var texte =
-      "Inscription au jeûne de 14 jours (9 au 22 novembre 2026)\n" +
-      "Nom : " + ligne.nom + "\n" +
-      "Prénom : " + ligne.prenom + "\n" +
-      "Quartier : " + ligne.quartier + "\n" +
-      "Numéro : " + ligne.telephone;
-    window.open("https://wa.me/" + form.dataset.whatsapp + "?text=" + encodeURIComponent(texte), "_blank", "noopener");
-    dire("WhatsApp s'ouvre avec votre inscription : envoyez le message pour la confirmer, puis rejoignez le groupe ci-dessous.");
-    montrerGroupe();
+    var libelle = bouton.textContent;
+    bouton.disabled = true;
+    bouton.textContent = "Enregistrement…";
+    fetch(conf.url.replace(/\/$/, "") + "/rest/v1/inscriptions_jeune", {
+      method: "POST",
+      headers: {
+        apikey: conf.anonKey,
+        Authorization: "Bearer " + conf.anonKey,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(ligne)
+    })
+      .then(function (r) {
+        if (r.status === 201 || r.status === 409) {
+          dire(
+            (r.status === 201
+              ? "Merci " + ligne.prenom + ", votre inscription est enregistrée."
+              : "Ce numéro est déjà inscrit.") + " Ouverture du groupe WhatsApp…"
+          );
+          entrerDansLeGroupe();
+        } else {
+          throw new Error("refus " + r.status);
+        }
+      })
+      .catch(function () {
+        /* L'inscription a échoué : on ne bloque pas l'entrée dans le groupe. */
+        dire("Votre inscription n'a pas pu être enregistrée, mais vous pouvez rejoindre le groupe.");
+        groupe.hidden = false;
+      })
+      .then(function () {
+        bouton.disabled = false;
+        bouton.textContent = libelle;
+      });
   });
 })();

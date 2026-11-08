@@ -2077,7 +2077,7 @@ $fil
           <h1>$titre</h1>
           <p class="lead">
             Thème : <strong>« $theme »</strong>. $dates.
-            Inscrivez-vous, puis rejoignez le groupe WhatsApp du jeûne.
+            Inscrivez-vous : la validation vous fait entrer directement dans le groupe WhatsApp du jeûne.
           </p>
         </div>
       </section>
@@ -2112,14 +2112,14 @@ $fil
                     <span class="tiny">J'accepte que ces informations soient utilisées par le Centre uniquement pour l'organisation du jeûne.</span>
                   </label>
                 </div>
-                <button class="btn btn--primary btn--lg" type="submit">Valider mon inscription</button>
+                <button class="btn btn--primary btn--lg" type="submit">Valider et rejoindre le groupe WhatsApp</button>
                 <p class="note-formulaire" data-avis hidden role="status"></p>
               </form>
 
               <div class="encart encart--or jeune-groupe" id="jeune-groupe" hidden>
-                <h3>Dernière étape : rejoignez le groupe</h3>
-                <p>Les prières du matin se font dans le groupe WhatsApp <strong>CAD Prière matinale</strong>.</p>
-                <a class="btn btn--primary btn--lg" href="$groupe" target="_blank" rel="noopener">Cliquez pour rejoindre le groupe WhatsApp</a>
+                <h3>WhatsApp ne s'est pas ouvert ?</h3>
+                <p>Touchez le bouton ci-dessous pour entrer dans le groupe du jeûne.</p>
+                <a class="btn btn--primary btn--lg" id="lien-groupe" href="$groupe" rel="noopener">Rejoindre le groupe WhatsApp</a>
               </div>
             </div>
 
