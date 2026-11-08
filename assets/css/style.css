@@ -1879,3 +1879,28 @@ dialog.visionneuse button {
   border: 1px solid var(--line);
   background: var(--surface-2);
 }
+
+/* ── Jeûne de novembre 2026 ─────────────────────────────────────── */
+.bandeau-jeune {
+  background: linear-gradient(90deg, #3a170e, #8a2a14 60%, #c2541f);
+  color: #fff;
+  padding: 12px 0;
+}
+.bandeau-jeune__in {
+  display: flex;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.bandeau-jeune p { margin: 0; font-size: 0.95rem; }
+.bandeau-jeune strong { color: #f6d77a; }
+.jeune-grille { gap: clamp(28px, 5vw, 56px); align-items: start; }
+.jeune-affiche {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.jeune-groupe { margin-top: 24px; }
+.jeune-groupe .btn { margin-top: 8px; }

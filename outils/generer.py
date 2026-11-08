@@ -698,21 +698,6 @@ $valeurs
         </div>
       </section>
 
-      <section class="section section--alt" id="departements">
-        <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Nos départements</p>
-            <h2>Onze services, une même maison</h2>
-            <p class="lead">
-              Chaque département a sa mission et son responsable. Les postes dont le
-              responsable n'est pas encore communiqué sont signalés comme tels.
-            </p>
-          </div>
-          <div class="grille grille--3">
-$departements
-          </div>
-        </div>
-      </section>
 
       <section class="section">
         <div class="wrap">
@@ -735,24 +720,6 @@ $departements
         </div>
       </section>
 
-      <section class="section section--ink">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px);align-items:center">
-            <div>
-              <p class="eyebrow eyebrow--or" style="color:#EF9C19">Le logo du Centre</p>
-              <h2>La flamme et la colombe.</h2>
-              <p>
-                Un oiseau qui prend son envol dans une flamme : la passion pour Dieu
-                et la liberté qu'Il donne. Le logo animé ci-contre est celui du Centre.
-              </p>
-            </div>
-            <video class="logo-video" src="assets/img/logo-anime.mp4"
-                   poster="assets/img/logo-animation-affiche.jpg"
-                   autoplay muted loop playsinline preload="metadata"
-                   aria-label="Logo animé du Centre des Amoureux de Dieu"></video>
-          </div>
-        </div>
-      </section>
 
       <section class="section">
         <div class="wrap">
@@ -768,7 +735,7 @@ $departements
               <div class="etat-vide" style="text-align:left">
                 <p class="tiny mb-0">
                   Les étapes du développement du ministère — premiers cultes,
-                  ouvertures de départements, campagnes — seront ajoutées ici
+                  campagnes, étapes marquantes — seront ajoutées ici
                   lorsque la direction les aura communiquées. Aucun récit n'est
                   inventé.
                 </p>
@@ -1930,15 +1897,20 @@ def corps_mediatheque():
 
 # ── Instanciation des pages ───────────────────────────────────────────
 
+def _avec_bandeau(corps):
+    """Ajoute le bandeau d'inscription au jeûne en tête de page."""
+    return corps.replace('<main id="contenu">\n', '<main id="contenu">\n' + bandeau_jeune(), 1)
+
+
 def corps_accueil():
-    return CORPS_ACCUEIL.substitute(
+    return _avec_bandeau(CORPS_ACCUEIL.substitute(
         pays=EGLISE["pays"],
         carte_culte=carte_culte(),
         videos="\n".join(carte_video(v) for v in VIDEOS[:3]),
         pasteur=PROPHETE["nom"],
         role=PROPHETE["role"],
         cta=CTA_FINAL,
-    )
+    ))
 
 
 def blocs_valeurs():
@@ -2003,7 +1975,7 @@ def corps_prophete():
 
 
 def corps_programmes():
-    return CORPS_PROGRAMMES.substitute(
+    return _avec_bandeau(CORPS_PROGRAMMES.substitute(
         fil=fil("Programmes"),
         creneaux=lignes_creneaux(),
         adresse=m(EGLISE["adresse"], "adresse à confirmer"),
@@ -2013,7 +1985,7 @@ def corps_programmes():
         whatsapp=m(EGLISE["whatsapp"], "WhatsApp à confirmer"),
         aConfirmer=m(AC, "à confirmer"),
         cta=CTA_FINAL,
-    )
+    ))
 
 
 def corps_temoignages():
@@ -2078,6 +2050,118 @@ def corps_legal():
     )
 
 
+
+# ── Jeûne de novembre 2026 : page d'inscription ─────────────────────
+JEUNE = {
+    "titre": "14 jours de jeûnes et prières",
+    "theme": "Expérimenter la gloire de Dieu",
+    "dates": "Du lundi 9 au dimanche 22 novembre 2026",
+    "affiche": "assets/img/affiches/jeune-14-jours-2026.jpg",
+    "groupe_whatsapp": "https://chat.whatsapp.com/Hloy0fmD8zvFcszL4Epzfv",
+    "programme": "jeune-14-jours-nov-2026",
+}
+
+BANDEAU_JEUNE = Template("""      <section class="bandeau-jeune">
+        <div class="wrap bandeau-jeune__in">
+          <p><strong>$titre</strong> · $dates · Thème : « $theme »</p>
+          <a class="btn btn--primary" href="${prefixe}jeune.html">Je m'inscris</a>
+        </div>
+      </section>
+""")
+
+CORPS_JEUNE = Template("""    <main id="contenu">
+      <section class="entete-page">
+        <div class="wrap wrap--narrow">
+$fil
+          <p class="eyebrow">Jeûne et prière · novembre 2026</p>
+          <h1>$titre</h1>
+          <p class="lead">
+            Thème : <strong>« $theme »</strong>. $dates.
+            Inscrivez-vous, puis rejoignez le groupe WhatsApp du jeûne.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="grille grille--2 jeune-grille">
+            <div>
+              <h2>Je participe au jeûne</h2>
+              <form class="formulaire" id="form-jeune" data-programme="$programme" data-whatsapp="$whatsapp_num" novalidate>
+                <div class="champ--duo">
+                  <div class="champ">
+                    <label for="j-nom">Nom</label>
+                    <input id="j-nom" name="nom" type="text" autocomplete="family-name" maxlength="80" required>
+                  </div>
+                  <div class="champ">
+                    <label for="j-prenom">Prénom</label>
+                    <input id="j-prenom" name="prenom" type="text" autocomplete="given-name" maxlength="80" required>
+                  </div>
+                </div>
+                <div class="champ">
+                  <label for="j-quartier">Quartier</label>
+                  <input id="j-quartier" name="quartier" type="text" placeholder="Ex. Riviera 2, Yopougon, Abobo…" maxlength="80" required>
+                </div>
+                <div class="champ">
+                  <label for="j-telephone">Numéro de téléphone (WhatsApp)</label>
+                  <input id="j-telephone" name="telephone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07 00 00 00 00" maxlength="20" pattern="[+0-9 .()-]{8,20}" required>
+                </div>
+                <div class="champ">
+                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
+                    <input type="checkbox" name="consentement" required style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
+                    <span class="tiny">J'accepte que ces informations soient utilisées par le Centre uniquement pour l'organisation du jeûne.</span>
+                  </label>
+                </div>
+                <button class="btn btn--primary btn--lg" type="submit">Valider mon inscription</button>
+                <p class="note-formulaire" data-avis hidden role="status"></p>
+              </form>
+
+              <div class="encart encart--or jeune-groupe" id="jeune-groupe" hidden>
+                <h3>Dernière étape : rejoignez le groupe</h3>
+                <p>Les prières du matin se font dans le groupe WhatsApp <strong>CAD Prière matinale</strong>.</p>
+                <a class="btn btn--primary btn--lg" href="$groupe" target="_blank" rel="noopener">Cliquez pour rejoindre le groupe WhatsApp</a>
+              </div>
+            </div>
+
+            <div>
+              <img class="jeune-affiche" src="$affiche" alt="Affiche : 14 jours de jeûnes et prières, du 9 au 22 novembre 2026, thème Expérimenter la gloire de Dieu, Prophète Daniel Jeff Adou" width="900" height="1114" loading="lazy">
+              <div class="carte" style="margin-top:20px">
+                <h3>Le programme</h3>
+                <ul class="liste-propre mb-0">
+                  <li><strong>Chaque matin, 5h00 – 5h30</strong> : WhatsApp, groupe « CAD Prière matinale »</li>
+                  <li><strong>Chaque soir, à partir de 20h45</strong> : Google Meet</li>
+                  <li><strong>Mercredis 11 et 18 novembre</strong> : à l'église</li>
+                  <li><strong>Vendredi 20 novembre, dès 21h00</strong> : Grande nuit de prophéties et de délivrances, à l'église</li>
+                </ul>
+                <p class="tiny mt-0" style="margin-top:12px">Renseignements : $telephone</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="assets/js/jeune.js" defer></script>
+""")
+
+
+def bandeau_jeune(prefixe=""):
+    return BANDEAU_JEUNE.substitute(prefixe=prefixe, **{k: JEUNE[k] for k in ("titre", "dates", "theme")})
+
+
+def corps_jeune():
+    return CORPS_JEUNE.substitute(
+        fil=fil("Jeûne de novembre"),
+        titre=JEUNE["titre"],
+        theme=JEUNE["theme"],
+        dates=JEUNE["dates"],
+        affiche=JEUNE["affiche"],
+        groupe=JEUNE["groupe_whatsapp"],
+        programme=JEUNE["programme"],
+        whatsapp_num=re.sub(r"\D", "", EGLISE["whatsapp"]),
+        telephone=EGLISE["telephone"],
+    )
+
+
 def pages_simples():
     return [
         ("index.html", "Accueil",
@@ -2104,6 +2188,9 @@ def pages_simples():
         ("priere.html", "Prière",
          "Envoyer une demande de prière à l'équipe pastorale, en toute confidentialité.",
          corps_priere(), True, None),
+        ("jeune.html", "Jeûne de novembre",
+         "Inscription aux 14 jours de jeûnes et prières du Centre des Amoureux de Dieu (9 au 22 novembre 2026) : Expérimenter la gloire de Dieu.",
+         corps_jeune(), True, None),
         ("nous-rejoindre.html", "Nous rejoindre",
          "Venir au Centre des Amoureux de Dieu : adresse, horaires, contacts, visite et formulaire de contact.",
          corps_rejoindre(), True, None),

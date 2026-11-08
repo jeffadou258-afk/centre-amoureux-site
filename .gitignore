@@ -3,5 +3,7 @@
 captures/
 node_modules/
 .vercel/
+.env
+.env.local
 admin/donnees/
 admin/.session-secret
