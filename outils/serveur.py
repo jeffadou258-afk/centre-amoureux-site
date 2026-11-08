@@ -22,8 +22,8 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 4321
 CSP = (
     "default-src 'self'; "
     "script-src 'self'; "
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-    "font-src https://fonts.gstatic.com; "
+    "style-src 'self' 'unsafe-inline'; "
+    "font-src 'self'; "
     "img-src 'self' data:; "
     "frame-src https://www.youtube-nocookie.com; "
     "connect-src 'self'; "

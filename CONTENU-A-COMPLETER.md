@@ -1,49 +1,16 @@
-# Contenu à fournir par le Centre des Amoureux de Dieu
+# Contenus à fournir par le Centre
 
-Fichier **généré** par `outils/generer.py` en relisant les pages réellement
-produites. Il liste chaque information encore marquée « à confirmer » (fond
-doré pointillé sur le site).
+Le site ne montre plus de cases « à confirmer » : ce qui manque est simplement
+absent. Voici ce qui l'enrichirait.
 
-Total : **5 marqueurs** sur le site.
+- **Photos HD** des cultes, de la louange et des événements (les photos actuelles
+  sont tirées des vidéos de culte, en 720p).
+- **Biographie du Prophète** : parcours, appel, dates clés.
+- **Histoire du Centre** : étapes marquantes depuis octobre 2023.
+- **Numéro Mobile Money** du Centre, si vous voulez l'afficher sur la page Dons.
+- **Instagram**, si le Centre a un compte.
+- **Couverture HD du livre** « Sortir des prisons familiales »
+  (`assets/img/livre-sortir-des-prisons.jpg`, actuellement générée depuis le PDF).
 
-## 1. Identité et contacts
-
-| Champ | À fournir |
-|---|---|
-| Ville / quartier / adresse complète | adresse officielle + point de repère |
-| Téléphone / WhatsApp | numéros du secrétariat |
-| E-mail | adresse réelle (actuellement `contact@centre-des-amoureux.org`, provisoire) |
-| Année de fondation, histoire du Centre | texte validé par la direction |
-| Responsables (pasteurs, anciens, départements) | liste et rôles |
-| Logo, photos officielles, portrait du Prophète | fichiers haute définition |
-| Facebook / Instagram / TikTok | URL des pages officielles |
-| Domaine, hébergeur, identification légale | informations administratives |
-| Mobile Money / coordonnées bancaires | compte marchand agréé |
-
-## 2. Horaires
-
-| Rendez-vous | Horaire |
-|---|---|
-| Culte d'adoration (dimanche) | à confirmer |
-| Culte de la Parole (mercredi) | à confirmer |
-| Nuit de prière (vendredi) | à confirmer |
-
-## 3. Où chaque marqueur apparaît
-
-### `dons.html`
-
-- à confirmer
-- à confirmer
-
-### `nous-rejoindre.html`
-
-- page à confirmer
-- compte à confirmer
-- compte à confirmer
-
-## 4. Après réception
-
-1. Renseigner `EGLISE` et `CRENEAUX` dans `outils/generer.py`.
-2. Lancer `python3 outils/generer.py`.
-3. Quand plus aucun marqueur ne subsiste, retirer `data-etat="travail"` de la
-   balise `<html>` dans le gabarit `T_PAGE` pour masquer le bandeau de travail.
+Pour modifier le site : éditer `outils/generer.py` puis lancer
+`python3 outils/generer.py`.

@@ -56,7 +56,7 @@ for page in PAGES:
     # Liens
     for attr, valeur in re.findall(r'\s(href|src)="([^"]+)"', html):
         total_liens += 1
-        if valeur.startswith(("http://", "https://", "mailto:", "data:")):
+        if valeur.startswith(("http://", "https://", "mailto:", "tel:", "data:")):
             if valeur.startswith("http"):
                 liens_externes.add(valeur)
             continue

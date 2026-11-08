@@ -1,6 +1,6 @@
 # Centre des Amoureux de Dieu — site officiel
 
-**En ligne :** https://jeffadou258-afk.github.io/centre-amoureux-site/
+**En ligne :** https://centre.161-97-152-13.sslip.io/ (serveur, déployé par Hermes) et https://jeffadou258-afk.github.io/centre-amoureux-site/ (GitHub Pages)
 
 > Publié par **GitHub Pages** (le dépôt est public : c'est la condition du
 > Pages gratuit). GitHub Pages ne permet pas d'en-têtes HTTP personnalisés :
@@ -66,17 +66,24 @@ direction (`Desktop/k/EMMANUEL KONAN.docx`), recopiés sans réécriture.
    un lot ultérieur, avec une base dédiée — aucun lien avec une autre
    application.
 
-## Charte
+## Charte (refonte du 08/11/2026)
 
-Orange `#ED6C10` · doré `#EF9C19` · rouge `#ED2727` · noir `#171717` · blanc ·
-gris `#F5F5F5` / `#666666`. Mode clair, mobile d'abord.
+Direction « mixte » choisie par le client : grands moments sombres, feu et or
+(accueil, en-têtes, affiches, appels), pages de lecture et formulaires en clair.
 
-Règle tenue : les surfaces de marque ne servent jamais de couleur de texte sur
-fond clair. Texte orange = `--brand-ink #A64C0B`, texte doré = `--gold-ink
-#8D5C0F`, bordure de champ = `--input-line #8A8A8A` (3,38:1, WCAG 1.4.11).
+Couleurs : nuit `#1B0F0A` · braise `#2B1710` · feu `#C4500A` (boutons) · or
+`#F2B544` · lin `#FBF6EF` · sable `#F3E7D6` · encre `#22140E`.
+Polices auto-hébergées (`assets/fonts`) : Anton pour les titres, boutons et
+navigation ; Source Serif 4 pour le texte. Aucun appel à Google Fonts.
 
-`verifier-contrastes.py` mesure **35 paires** réelles pour le thème orange et
-**21** pour la variante nuit & or ; il sort en code 1 au premier écart.
+Photos : `assets/img/culte/`, tirées de la captation du culte du 1er novembre
+2026 (720p). À remplacer par des photos HD dès qu'elles existent.
+
+Les formulaires (prière, témoignage, contact) préparent un message WhatsApp
+adressé au Centre tant que `CAD_API` est vide. Les événements à l'affiche sont
+dans `EVENEMENTS` (`outils/generer.py`) et disparaissent seuls après leur date.
+
+`verifier-contrastes.py` mesure 15 paires réelles de la nouvelle charte.
 
 ## Contenu réel
 

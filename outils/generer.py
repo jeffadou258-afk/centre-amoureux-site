@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Générateur du site vitrine du CENTRE DES AMOUREUX DE DIEU.
+Générateur du site du CENTRE DES AMOUREUX DE DIEU.
 
-Structure conforme au cahier des charges (rubriques 3.1 à 3.10) pour la partie
-publique. Les gabarits utilisent string.Template (`$jeton`) et non `%` : un
-style en ligne contenant `border-radius:50%` casse un gabarit formaté par `%`
-(TypeError: not enough arguments for format string) et la ligne signalée est
-celle du gabarit, pas le `%` coupable.
+Site statique : chaque page est produite ici à partir d'une seule source de
+vérité (EGLISE, CRENEAUX, VIDEOS, EVENEMENTS, PROPHETE). Ne pas modifier les
+fichiers .html à la main : modifier ce fichier puis relancer.
 
-Une seule source de vérité : EGLISE, CRENEAUX, VIDEOS, PROPHETE.
+Les gabarits utilisent string.Template (`$jeton`) : un « $ » littéral s'écrit
+« $$ ».
 
 Usage :
     python3 outils/generer.py
@@ -18,7 +17,6 @@ Usage :
 import json
 import os
 import re
-import unicodedata
 from string import Template
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,47 +25,41 @@ RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 1. DONNÉES — la seule source de vérité du site
 # ══════════════════════════════════════════════════════════════════════
 
-AC = "A_COMPLETER"
-
 EGLISE = {
     "nom": "Centre des Amoureux de Dieu",
-    "nom_maj": "CENTRE DES AMOUREUX DE DIEU",
     "sigle": "CAD",
     "pays": "Côte d'Ivoire",
     "ville": "Abidjan",
-    "quartier": "Cocody Rivera 2",
-    "adresse": "Cocody Rivera 2, en face de l'imprimerie DA Communication",
+    "quartier": "Cocody Riviera 2",
+    "adresse": "Cocody Riviera 2, en face de l'imprimerie DA Communication",
+    "acces": ("Du rond-point de la Riviera 2, prenez la direction de la station-service "
+              "Petroleum, tournez à gauche puis faites 100 m : nous sommes en face de "
+              "l'imprimerie DA Communication."),
     "telephone": "+225 07 87 59 32 89",
-    "whatsapp": "+225 07 87 59 32 89",
-    "email": "contact@centre-des-amoureux.org",
+    "whatsapp": "2250787593289",
     "youtube": "https://www.youtube.com/@jeffadou3161",
-    "facebook": AC,
-    "instagram": AC,
-    "tiktok": AC,
-    "annee_fondation": "octobre 2023",
-    # Adresse de publication actuelle. Le jour où le domaine est acheté,
-    # remplacer par "https://centre-des-amoureux.org" puis régénérer.
+    "facebook": "https://www.facebook.com/profile.php?id=61554023926797",
+    "tiktok": "https://www.tiktok.com/@centre.des.amoure",
+    "fondation": "octobre 2023",
+    "maps": "https://www.google.com/maps/search/?api=1&amp;query=Cocody+Riviera+2+imprimerie+DA+Communication+Abidjan",
+    # Adresse de publication (canonical, partage, sitemap).
     "site": "https://jeffadou258-afk.github.io/centre-amoureux-site",
 }
 
 # Décision du client (31/10/2026) : le pasteur du Centre est Daniel Jeff Adou.
-# Le cahier des charges nomme « Issa Kourouma » — erreur du document, signalée
-# et tranchée par le client. Ne pas « corriger » sans nouvelle décision.
 PROPHETE = {
     "nom": "Prophète Daniel Jeff Adou",
     "nom_court": "Daniel Jeff Adou",
-    "role": "Prophète et pasteur du Centre des Amoureux de Dieu",
-    "chaine": EGLISE["youtube"],
+    "role": "Fondateur et pasteur du Centre des Amoureux de Dieu",
+    "facebook": "https://www.facebook.com/DanielJeffProphete",
 }
 
-# Horaires communiqués par le Centre le 31/10/2026.
-# Le culte du mercredi a lieu « en quinze » : une semaine sur deux.
+# Horaires communiqués par le Centre (31/10/2026).
 CRENEAUX = [
     ("Dimanche", "Culte d'adoration", "14h00 – 18h30"),
-    ("Mercredi", "Culte de la Parole (toutes les deux semaines)", "19h00 – 21h00"),
+    ("Mercredi", "Culte de la Parole, une semaine sur deux", "19h00 – 21h00"),
 ]
 
-# ── Vision, mission et valeurs officielles (document de la direction) ──
 VISION = ("Former des ouvriers et des serviteurs de Dieu, bâtir une armée "
           "d'amoureux passionnés pour Dieu et les équiper pour impacter la société.")
 
@@ -85,38 +77,27 @@ VALEURS = [
     ("Excellence", "Poursuivre la qualité et la diligence dans tout ce que nous faisons pour glorifier Dieu.", "Colossiens 3 : 23"),
 ]
 
-# Responsable omis = poste non encore communiqué (affiché « à confirmer »).
-DEPARTEMENTS = [
-    ("Accueil des nouveaux", "Koffi Prisca", "Prise en charge des nouveaux et des visiteurs, orientation vers les cellules et le pasteur."),
-    ("Sentinelles (intercession)", None, "Couvre l'église en prière, intercède avant et pendant chaque culte."),
-    ("La Voix des Chérubins (chantres)", "Lilian Armoo", "Prépare l'atmosphère spirituelle : louange, adoration, répétitions."),
-    ("Médias", "N'Taye Daniel", "Sonorisation, captation, diffusion en direct, réseaux sociaux et visuels."),
-    ("Gagneurs d'âmes (évangélisation)", "Carmel Yao", "Sorties d'évangélisation, campagnes et suivi des nouveaux convertis."),
-    ("Accueil général", "Marylène", "Accueil à l'entrée, placement, ordre et propreté du lieu."),
-    ("Gestion des cultes", None, "Coordonne le programme du culte et les plannings des intervenants."),
-    ("Trésorerie", None, "Dîmes, offrandes, comptabilité et rapports au pasteur."),
-    ("Secrétariat", None, "Documents, courriers, plannings et comptes rendus de réunions."),
-    ("Moyens généraux", "Kossonou Léon", "Logistique matérielle : chaises, tentes, eau, entretien."),
-    ("Services d'ordre", None, "Sécurité des lieux, maintien de l'ordre et gestion des flux."),
-]
-
+# Vidéos de la chaîne officielle, de la plus récente à la plus ancienne.
 VIDEOS = [
+    {"id": "EKI8TVqpyzs", "titre": "Remporter les batailles par la prière",
+     "iso": "2026-11-01", "date": "1er novembre 2026", "genre": "Culte",
+     "slug": "remporter-les-batailles-par-la-priere"},
     {"id": "Vke4iYzemIs", "titre": "Tous les grands ont d'abord rêvé grand",
      "iso": "2026-10-17", "date": "17 octobre 2026", "genre": "Exhortation",
      "slug": "tous-les-grands-ont-reve-grand"},
-    {"id": "SXql767Lo7w", "titre": "10 CHOSES A SAVOIR SUR L'ONCTION ROYALE",
+    {"id": "SXql767Lo7w", "titre": "10 choses à savoir sur l'onction royale (partie 2)",
      "iso": "2026-10-16", "date": "16 octobre 2026", "genre": "Enseignement",
      "slug": "onction-royale-10-choses-a-savoir"},
-    {"id": "jrefqSertlc", "titre": "10 CHOSES A SAVOIR SUR L'ONCTION ROYALE",
+    {"id": "jrefqSertlc", "titre": "10 choses à savoir sur l'onction royale (partie 1)",
      "iso": "2026-10-12", "date": "12 octobre 2026", "genre": "Enseignement",
      "slug": "onction-royale-10-choses"},
     {"id": "2CHnQLRtN0Y", "titre": "L'huile, le cœur et le trône",
      "iso": "2026-09-28", "date": "28 septembre 2026", "genre": "Enseignement",
      "slug": "huile-coeur-et-trone"},
-    {"id": "-hKzzUDnh0E", "titre": "PRIONS ENSEMBLE",
+    {"id": "-hKzzUDnh0E", "titre": "Prions ensemble",
      "iso": "2026-09-24", "date": "24 septembre 2026", "genre": "Prière",
      "slug": "prions-ensemble"},
-    {"id": "OlT6R0wc0JQ", "titre": "L'HUILE LE COEUR ET LE TRONE (PARTIE 1)",
+    {"id": "OlT6R0wc0JQ", "titre": "L'huile, le cœur et le trône (partie 1)",
      "iso": "2026-09-22", "date": "22 septembre 2026", "genre": "Enseignement",
      "slug": "huile-coeur-et-trone-partie-1"},
     {"id": "_fldckxVCDI", "titre": "Comment reconnaître un sorcier",
@@ -132,31 +113,61 @@ for _v in VIDEOS:
     if _v["genre"] not in GENRES:
         GENRES.append(_v["genre"])
 
+# Événements à l'affiche. « fin » (AAAA-MM-JJ) : le lendemain, la carte
+# disparaît toute seule du site (assets/js/site.js).
+EVENEMENTS = [
+    {
+        "titre": "14 jours de jeûnes et prières",
+        "theme": "Expérimenter la gloire de Dieu",
+        "quand": "Du lundi 9 au dimanche 22 novembre 2026",
+        "detail": ("Prière du matin de 5h00 à 5h30 sur WhatsApp, prière du soir dès "
+                   "20h45 sur Google Meet, et les mercredis 11 et 18 à l'église."),
+        "affiche": "assets/img/affiches/jeune-14-jours-2026.jpg",
+        "lien": "jeune.html",
+        "action": "M'inscrire au jeûne",
+        "fin": "2026-11-22",
+    },
+    {
+        "titre": "Grande nuit de prophéties et de délivrances",
+        "theme": "J'ai ouvert devant toi une porte que nul ne peut fermer",
+        "quand": "Vendredi 20 novembre 2026, dès 21h00",
+        "detail": ("Avec le Prophète Abraham Aké, leader du MIFE, et le Prophète "
+                   "Jeff Adou. Au Centre, à Cocody Riviera 2."),
+        "affiche": "assets/img/affiches/nuit-propheties-2026.jpg",
+        "lien": "nous-rejoindre.html",
+        "action": "Voir l'itinéraire",
+        "fin": "2026-11-20",
+    },
+]
+
+# Photos tirées des captations de cultes (dossier assets/img/culte).
+PHOTOS_CULTE = [
+    ("culte-scene", "Le Prophète Daniel Jeff Adou au pupitre, pendant le culte"),
+    ("culte-predication", "Prédication du dimanche au Centre des Amoureux de Dieu"),
+    ("culte-proche", "Le Prophète prêche, micro en main"),
+    ("culte-assemblee", "Le Prophète s'adresse à l'assemblée"),
+    ("culte-salle", "La salle du Centre et l'estrade, avant le culte"),
+    ("culte-large", "L'estrade du Centre des Amoureux de Dieu"),
+]
+
 NAV = [
     ("index.html", "Accueil"),
     ("le-centre.html", "Le Centre"),
     ("le-prophete.html", "Le Prophète"),
     ("programmes.html", "Programmes"),
-    ("enseignements.html", "Enseignements"),
+    ("enseignements.html", "Prédications"),
     ("mediatheque.html", "Médiathèque"),
-    ("temoignages.html", "Témoignages"),
     ("priere.html", "Prière"),
     ("nous-rejoindre.html", "Nous rejoindre"),
 ]
 
 # ══════════════════════════════════════════════════════════════════════
-# 2. OUTILS
+# 2. COMPOSANTS
 # ══════════════════════════════════════════════════════════════════════
 
 
-def m(valeur, quoi="à confirmer"):
-    """Marque une information que l'église doit encore fournir."""
-    if valeur == AC:
-        return (
-            '<span class="a-completer" data-a-completer="1" '
-            'title="Information à fournir par le Centre">%s</span>' % quoi
-        )
-    return valeur
+def attr(texte):
+    return texte.replace('"', "&quot;")
 
 
 def vignette(v):
@@ -167,131 +178,111 @@ def lien_fiche(v, prefixe=""):
     return "%spredications/%s.html" % (prefixe, v["slug"])
 
 
-# ── Composants ────────────────────────────────────────────────────────
-
-T_VIDEO = Template("""            <article class="video-carte monte" data-genre="$genre" data-titre="$titre_attr">
-              <div class="video-carte__media">
-                <button class="lecteur" type="button" data-video="$id" data-titre="$titre_attr"
-                        aria-label="Lire la vidéo : $titre_attr">
-                  <img class="vignette" src="$vignette" alt="" width="1280" height="720" loading="lazy">
-                  <span class="lecteur__voile" aria-hidden="true"></span>
-                  <span class="lecteur__badge" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                  </span>
-                  <span class="lecteur__legende">Cliquer pour lire</span>
-                </button>
-              </div>
-              <div class="video-carte__corps">
-                <p class="video-carte__meta">$genre · $date</p>
-                <h3 class="video-carte__titre">
-                  <a href="$lien" style="text-decoration:none;color:inherit">$titre</a>
-                </h3>
-              </div>
+T_VIDEO = Template("""            <article class="video" data-genre="$genre" data-titre="$titre_attr">
+              <button class="lecteur" type="button" data-video="$id" data-titre="$titre_attr"
+                      aria-label="Lire la vidéo : $titre_attr">
+                <img src="$prefixe$vignette" alt="" width="1280" height="720" loading="lazy">
+                <span class="lecteur__bouton" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+              </button>
+              <p class="video__meta">$genre, $date</p>
+              <h3 class="video__titre"><a href="$lien">$titre</a></h3>
             </article>""")
 
 
 def carte_video(v, prefixe=""):
     return T_VIDEO.substitute(
-        id=v["id"],
-        titre=v["titre"],
-        titre_attr=v["titre"].replace('"', "&quot;"),
-        date=v["date"],
-        genre=v["genre"],
-        slug=v["slug"],
-        lien=lien_fiche(v, prefixe),
-        vignette=vignette(v),
+        id=v["id"], titre=v["titre"], titre_attr=attr(v["titre"]), date=v["date"],
+        genre=v["genre"], lien=lien_fiche(v, prefixe), vignette=vignette(v), prefixe=prefixe,
     )
 
 
-T_LIGNE_CRENEAU = Template("""          <div class="programme__ligne">
-            <span class="programme__jour">$jour</span>
-            <span class="programme__nom">$intitule</span>
-            <span class="programme__heure">$heure</span>
-          </div>""")
-
-
-def lignes_creneaux():
+def lignes_horaires():
     return "\n".join(
-        T_LIGNE_CRENEAU.substitute(jour=j, intitule=i, heure=m(h))
-        for j, i, h in CRENEAUX
+        """              <div class="horaire">
+                <span class="horaire__jour">%s</span>
+                <span class="horaire__nom">%s</span>
+                <span class="horaire__heure">%s</span>
+              </div>""" % c
+        for c in CRENEAUX
     )
 
 
-T_CARTE_CULTE = Template("""          <aside class="carte-culte monte monte--2" aria-label="Horaires des cultes">
-            <p class="carte-culte__titre">
-              <span class="pastille-vie" aria-hidden="true"></span>
-              Nos rendez-vous
-            </p>
-$lignes
-            <div class="carte-culte__pied">
-              <span>$ville</span>
-              <a class="link-arrow" href="programmes.html">Voir les programmes</a>
+T_EVENEMENT = Template("""          <article class="evenement" data-fin="$fin">
+            <a class="evenement__affiche" href="$lien"><img src="$prefixe$affiche" alt="Affiche : $titre_attr" width="900" height="1114" loading="lazy"></a>
+            <div class="evenement__texte">
+              <p class="evenement__quand">$quand</p>
+              <h3>$titre</h3>
+              <p class="evenement__theme">« $theme »</p>
+              <p>$detail</p>
+              <a class="btn btn--feu" href="$prefixe$lien">$action</a>
             </div>
-          </aside>""")
+          </article>""")
 
 
-def carte_culte():
-    lignes = []
-    for jour, intitule, heure in CRENEAUX:
-        lignes.append(
-            """            <div class="creneau">
-              <span>
-                <span class="creneau__jour">%s</span><br>
-                <span class="tiny muted">%s</span>
-              </span>
-              <span class="creneau__heure">%s</span>
-            </div>"""
-            % (jour, intitule, m(heure, "horaire à confirmer"))
-        )
-    return T_CARTE_CULTE.substitute(
-        lignes="\n".join(lignes), ville=m(EGLISE["ville"], "ville à confirmer")
+def evenements(prefixe=""):
+    return "\n".join(
+        T_EVENEMENT.substitute(prefixe=prefixe, titre_attr=attr(e["titre"]), **e) for e in EVENEMENTS
     )
 
 
-T_CTA = Template("""      <div class="wrap">
-        <div class="cta-final">
-          <h2>Vous êtes attendu, tel que vous êtes.</h2>
-          <p>
-            Que vous veniez pour la première fois ou que vous cherchiez une maison
-            spirituelle, il y a une place pour vous au $nom.
-          </p>
-          <div class="cta-final__actions">
-            <a class="btn btn--primary btn--lg" href="${prefixe}nous-rejoindre.html">Préparer ma visite</a>
-            <a class="btn btn--sur-ink btn--lg" href="${prefixe}priere.html">Demander une prière</a>
+T_ENTETE = Template("""      <section class="entete$classe" style="background-image:url('$prefixe$photo')">
+        <div class="wrap">
+          <nav class="fil" aria-label="Fil d'Ariane"><a href="${prefixe}index.html">Accueil</a> <span aria-hidden="true">/</span> $libelle</nav>
+          <h1>$titre</h1>
+          <p class="entete__intro">$intro</p>
+        </div>
+      </section>""")
+
+
+def entete(libelle, titre, intro, photo="assets/img/culte/culte-salle.jpg", prefixe="", classe=""):
+    return T_ENTETE.substitute(libelle=libelle, titre=titre, intro=intro, photo=photo,
+                               prefixe=prefixe, classe=(" " + classe) if classe else "")
+
+
+T_APPEL = Template("""      <section class="appel" style="background-image:url('${prefixe}assets/img/culte/culte-large.jpg')">
+        <div class="wrap appel__grille">
+          <div>
+            <h2>Venez tel que vous êtes.</h2>
+            <p>Que ce soit votre première fois ou que vous cherchiez une maison spirituelle,
+            il y a une place pour vous dimanche.</p>
+          </div>
+          <div class="appel__infos">
+$horaires
+            <p class="appel__adresse">$adresse</p>
+            <div class="actions">
+              <a class="btn btn--feu" href="${prefixe}nous-rejoindre.html">Préparer ma visite</a>
+              <a class="btn btn--contour" href="$maps" target="_blank" rel="noopener">Itinéraire</a>
+            </div>
           </div>
         </div>
-      </div>""")
-
-CTA_FINAL = T_CTA.substitute(nom=EGLISE["nom"], prefixe="")
-
-T_FIL = Template("""          <nav class="fil" aria-label="Fil d'Ariane">
-            <a href="${prefixe}index.html">Accueil</a><span aria-hidden="true">/</span><span>$libelle</span>
-          </nav>""")
+      </section>""")
 
 
-def fil(libelle, prefixe=""):
-    return T_FIL.substitute(prefixe=prefixe, libelle=libelle)
+def appel(prefixe=""):
+    return T_APPEL.substitute(prefixe=prefixe, horaires=lignes_horaires(),
+                              adresse=EGLISE["adresse"], maps=EGLISE["maps"])
 
 
-def cta_final(prefixe=""):
-    return T_CTA.substitute(nom=EGLISE["nom"], prefixe=prefixe)
+def bouton_whatsapp(texte, libelle, classe="btn btn--feu"):
+    from urllib.parse import quote
+    return '<a class="%s" href="https://wa.me/%s?text=%s" target="_blank" rel="noopener">%s</a>' % (
+        classe, EGLISE["whatsapp"], quote(texte), libelle)
 
 
 # ── Gabarit de page ───────────────────────────────────────────────────
 
 T_PAGE = Template("""<!doctype html>
-<html lang="fr" data-etat="travail">
+<html lang="fr">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>$titre_complet</title>
     <meta name="description" content="$description">
     <meta name="robots" content="$robots">
-    <meta name="theme-color" content="#ED6C10">
+    <meta name="theme-color" content="#1B0F0A">
     <link rel="canonical" href="$canonical">
     <link rel="icon" href="${prefixe}assets/img/icone-512.png" type="image/png">
     <link rel="apple-touch-icon" href="${prefixe}assets/img/icone-512.png">
-
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="$nom">
     <meta property="og:locale" content="fr_FR">
@@ -300,43 +291,28 @@ T_PAGE = Template("""<!doctype html>
     <meta property="og:url" content="$canonical">
     <meta property="og:image" content="$site/assets/img/partage.png">
     <meta name="twitter:card" content="summary_large_image">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="${prefixe}assets/fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="${prefixe}assets/css/style.css">
     <script type="application/ld+json">
 $jsonld
     </script>
   </head>
-  <body>
+  <body class="$classe_corps">
     <a class="skip" href="#contenu">Aller au contenu</a>
 
-    <div class="bandeau-travail" role="note">
-      Version de travail — les informations surlignées doivent être fournies par le Centre.
-    </div>
-
     <header class="site-header">
-      <div class="wrap">
-        <a class="marque" href="${prefixe}index.html" aria-label="$nom — accueil">
-          <img class="marque__logo" src="${prefixe}assets/img/logo-flamme.png"
-               alt="" width="26" height="46" fetchpriority="high">
-          <span class="marque__texte">
-            <span class="marque__nom">$nom</span>
-            <span class="marque__sous">$pays</span>
-          </span>
+      <div class="wrap site-header__in">
+        <a class="marque" href="${prefixe}index.html" aria-label="$nom, accueil">
+          <img src="${prefixe}assets/img/logo-flamme.png" alt="" width="26" height="46">
+          <span>Centre des<br>Amoureux de Dieu</span>
         </a>
-
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-principal">
           <span class="nav-toggle__barre" aria-hidden="true"></span>
-          <span class="sr-only">Ouvrir le menu</span>
+          <span class="sr-only">Menu</span>
         </button>
-
         <nav class="nav" id="nav-principal" data-ouvert="false" aria-label="Navigation principale">
 $navigation
         </nav>
-
-        <a class="btn btn--primary nav-cta" href="${prefixe}dons.html">Faire un don</a>
       </div>
     </header>
 
@@ -344,59 +320,47 @@ $corps
 
     <footer class="site-footer">
       <div class="wrap">
-        <div class="footer-grille">
+        <div class="site-footer__haut">
+          <p class="site-footer__devise">Une maison de prière, de Parole et d'amour fraternel.</p>
+          <div class="reseaux">
+            <a href="$youtube" target="_blank" rel="noopener">YouTube</a>
+            <a href="$facebook" target="_blank" rel="noopener">Facebook</a>
+            <a href="$tiktok" target="_blank" rel="noopener">TikTok</a>
+            <a href="https://wa.me/$whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+          </div>
+        </div>
+        <div class="site-footer__grille">
           <div>
-            <a class="marque" href="${prefixe}index.html">
-              <img class="marque__logo" src="${prefixe}assets/img/logo-flamme.png"
-               alt="" width="26" height="46" fetchpriority="high">
-              <span class="marque__texte">
-                <span class="marque__nom">$nom</span>
-                <span class="marque__sous">$pays</span>
-              </span>
-            </a>
-            <p class="espace-haut" style="max-width:34ch">
-              Une maison de prière, de Parole et d'amour fraternel, ouverte à tous.
-            </p>
-            <p class="tiny" style="margin-top:18px">
-              <a href="$youtube" rel="noopener" target="_blank">Chaîne YouTube du ministère</a>
-            </p>
+            <h2>Nous trouver</h2>
+            <p>$adresse<br>$ville, $pays</p>
+            <p><a href="tel:+$whatsapp">$telephone</a></p>
           </div>
           <div>
-            <h3>Le Centre</h3>
-            <ul class="footer-liens">
+            <h2>Cultes</h2>
+            <p>Dimanche, 14h00 – 18h30<br>Mercredi (une semaine sur deux), 19h00 – 21h00</p>
+          </div>
+          <div>
+            <h2>Le Centre</h2>
+            <ul>
               <li><a href="${prefixe}le-centre.html">Qui nous sommes</a></li>
               <li><a href="${prefixe}le-prophete.html">Le Prophète</a></li>
-              <li><a href="${prefixe}programmes.html">Nos programmes</a></li>
+              <li><a href="${prefixe}programmes.html">Programmes</a></li>
               <li><a href="${prefixe}temoignages.html">Témoignages</a></li>
             </ul>
           </div>
           <div>
-            <h3>Ressources</h3>
-            <ul class="footer-liens">
-              <li><a href="${prefixe}enseignements.html">Enseignements</a></li>
-              <li><a href="${prefixe}mediatheque.html">Médiathèque</a></li>
-              <li><a href="${prefixe}priere.html">Demande de prière</a></li>
+            <h2>Agir</h2>
+            <ul>
+              <li><a href="${prefixe}priere.html">Demander une prière</a></li>
+              <li><a href="${prefixe}enseignements.html">Écouter une prédication</a></li>
               <li><a href="${prefixe}dons.html">Faire un don</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3>Nous trouver</h3>
-            <ul class="footer-liens">
-              <li>Ville : $ville</li>
-              <li>Adresse : $adresse</li>
-              <li>Téléphone : $telephone</li>
-              <li><a href="mailto:$email">$email</a></li>
+              <li><a href="${prefixe}nous-rejoindre.html">Nous écrire</a></li>
             </ul>
           </div>
         </div>
-
-        <div class="footer-bas">
-          <p class="mb-0">© <span data-annee>2026</span> $nom. Tous droits réservés.</p>
-          <ul>
-            <li><a href="${prefixe}mentions-legales.html">Mentions légales</a></li>
-            <li><a href="${prefixe}confidentialite.html">Confidentialité</a></li>
-            <li><a href="${prefixe}nous-rejoindre.html">Contact</a></li>
-          </ul>
+        <div class="site-footer__bas">
+          <p>© <span data-annee>2026</span> $nom</p>
+          <p><a href="${prefixe}mentions-legales.html">Mentions légales</a> <a href="${prefixe}confidentialite.html">Confidentialité</a></p>
         </div>
       </div>
     </footer>
@@ -414,54 +378,33 @@ def navigation(page, prefixe=""):
     for href, libelle in NAV:
         actif = ' aria-current="page"' if href == page else ""
         liens.append('          <a href="%s%s"%s>%s</a>' % (prefixe, href, actif, libelle))
-    liens.append(
-        '          <a class="btn btn--primary nav__don" href="%sdons.html">Faire un don</a>' % prefixe
-    )
+    liens.append('          <a class="btn btn--feu nav__don" href="%sdons.html">Faire un don</a>' % prefixe)
     return "\n".join(liens)
 
 
-def page_html(page, titre, description, corps, index=True, jsonld=None, prefixe=""):
-    nom_complet = (
-        "%s · %s" % (EGLISE["nom"], titre)
-        if titre == "Accueil"
-        else "%s · %s" % (titre, EGLISE["nom"])
-    )
+def page_html(page, titre, description, corps, index=True, jsonld=None, prefixe="", classe_corps=""):
+    nom_complet = (EGLISE["nom"] + " · Abidjan") if page == "index.html" else "%s · %s" % (titre, EGLISE["nom"])
     if jsonld is None:
         jsonld = {
             "@context": "https://schema.org",
             "@type": "Church",
             "name": EGLISE["nom"],
-            "alternateName": EGLISE["nom_maj"],
-            "description": "Église du Centre des Amoureux de Dieu — cultes, enseignements, prière et vie fraternelle.",
             "url": EGLISE["site"],
-            "address": {
-                "@type": "PostalAddress",
-                "streetAddress": EGLISE["adresse"],
-                "addressLocality": EGLISE["ville"],
-                "addressCountry": "CI",
-            },
+            "address": {"@type": "PostalAddress", "streetAddress": EGLISE["adresse"],
+                        "addressLocality": EGLISE["ville"], "addressCountry": "CI"},
             "telephone": EGLISE["telephone"],
-            "sameAs": [EGLISE["youtube"]],
+            "sameAs": [EGLISE["youtube"], EGLISE["facebook"], EGLISE["tiktok"]],
         }
     return T_PAGE.substitute(
-        titre_complet=nom_complet,
-        description=description,
+        titre_complet=nom_complet, description=description,
         robots="index,follow" if index else "noindex,follow",
         canonical=EGLISE["site"] + "/" + ("" if page == "index.html" else page),
-        og_titre=titre,
-        site=EGLISE["site"],
-        nom=EGLISE["nom"],
-        sigle=EGLISE["sigle"],
-        pays=EGLISE["pays"],
-        youtube=EGLISE["youtube"],
-        email=EGLISE["email"],
-        ville=m(EGLISE["ville"]),
-        adresse=m(EGLISE["adresse"]),
-        telephone=m(EGLISE["telephone"]),
-        navigation=navigation(page, prefixe),
-        jsonld=json.dumps(jsonld, ensure_ascii=False, indent=2),
-        corps=corps,
-        prefixe=prefixe,
+        og_titre=titre, site=EGLISE["site"], nom=EGLISE["nom"], pays=EGLISE["pays"],
+        youtube=EGLISE["youtube"], facebook=EGLISE["facebook"], tiktok=EGLISE["tiktok"],
+        whatsapp=EGLISE["whatsapp"], ville=EGLISE["ville"], adresse=EGLISE["adresse"],
+        telephone=EGLISE["telephone"], navigation=navigation(page, prefixe),
+        jsonld=json.dumps(jsonld, ensure_ascii=False, indent=2), corps=corps,
+        prefixe=prefixe, classe_corps=classe_corps,
     )
 
 
@@ -471,682 +414,429 @@ def page_html(page, titre, description, corps, index=True, jsonld=None, prefixe=
 
 CORPS_ACCUEIL = Template("""    <main id="contenu">
       <section class="hero">
-        <div class="wrap">
-          <div class="hero__grille">
-            <div>
-              <p class="eyebrow monte">Église · Abidjan · depuis octobre 2023</p>
-              <h1 class="monte monte--2">
-                Un lieu pour <em>aimer Dieu</em>,<br>et être aimé de Lui.
-              </h1>
-              <p class="lead monte monte--3">
-                Le Centre des Amoureux de Dieu est une famille spirituelle où la
-                Parole est enseignée avec clarté, où la prière est une respiration,
-                et où chacun est accueilli avec dignité.
-              </p>
-              <div class="hero__actions monte monte--3">
-                <a class="btn btn--primary btn--lg" href="le-centre.html">Découvrir notre ministère</a>
-                <a class="btn btn--ghost btn--lg" href="nous-rejoindre.html">Nous rejoindre</a>
-              </div>
-              <p class="hero__note monte monte--3">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.4-7 10-7 10Z"/></svg>
-                Ouvert à tous, sans condition et sans tenue exigée. Culte le dimanche
-                de 14h00 à 18h30, à Cocody Rivera 2.
-              </p>
-            </div>
-$carte_culte
+        <img class="hero__photo" src="assets/img/culte/culte-salle.jpg" alt="" width="1280" height="658" fetchpriority="high">
+        <div class="wrap hero__contenu">
+          <p class="hero__lieu">Église à Cocody Riviera 2, Abidjan</p>
+          <h1 class="hero__titre"><span>Un lieu pour</span> <span>aimer Dieu</span> <span>et être aimé de Lui.</span></h1>
+          <p class="hero__texte">Une famille spirituelle où la Parole est enseignée avec clarté,
+          où la prière est une respiration, et où chacun est accueilli avec dignité.</p>
+          <div class="actions">
+            <a class="btn btn--feu" href="nous-rejoindre.html">Venir dimanche</a>
+            <a class="btn btn--contour" href="#predications">Écouter une prédication</a>
+          </div>
+        </div>
+        <div class="hero__bas">
+          <div class="wrap hero__bas-in">
+            <p class="compte" data-compte>Culte chaque dimanche, de 14h00 à 18h30</p>
+            <p class="hero__adresse">$adresse · <a href="$maps" target="_blank" rel="noopener">Itinéraire</a></p>
           </div>
         </div>
       </section>
 
-      <section class="section section--serre">
+      <section class="section section--nuit" id="a-l-affiche">
         <div class="wrap">
-          <div class="grille grille--4">
-            <div class="carte">
-              <p class="carte__numero">01</p>
-              <h3>Adoration</h3>
-              <p class="tiny muted mb-0">Nous nous rassemblons pour honorer Dieu, dans la louange et le silence.</p>
+          <div class="tete">
+            <h2>À l'affiche ce mois-ci</h2>
+            <p>Notre thème de novembre : <strong>remporter les batailles par la prière</strong>.</p>
+          </div>
+          <div class="evenements">
+$evenements
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="predications">
+        <div class="wrap">
+          <div class="tete tete--ligne">
+            <h2>Dernières prédications</h2>
+            <a class="lien" href="enseignements.html">Toutes les prédications</a>
+          </div>
+          <div class="une">
+            <div class="une__principale">
+$premiere
             </div>
-            <div class="carte">
-              <p class="carte__numero">02</p>
-              <h3>Parole</h3>
-              <p class="tiny muted mb-0">La Bible est enseignée simplement, pour être vécue au quotidien.</p>
-            </div>
-            <div class="carte">
-              <p class="carte__numero">03</p>
-              <h3>Communion</h3>
-              <p class="tiny muted mb-0">Personne ne devrait avancer seul : nous marchons ensemble.</p>
-            </div>
-            <div class="carte">
-              <p class="carte__numero">04</p>
-              <h3>Service</h3>
-              <p class="tiny muted mb-0">Aimer Dieu se traduit par des actes concrets envers les autres.</p>
+            <div class="une__suite">
+$suivantes
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="grille grille--2" style="align-items:center;gap:clamp(28px,5vw,64px)">
-            <div>
-              <p class="eyebrow">Qui nous sommes</p>
-              <h2>Une maison où l'on apprend à aimer.</h2>
-              <p>
-                « Amoureux de Dieu » n'est pas un titre que l'on se donne : c'est une
-                direction de vie. Nous apprenons à aimer Dieu d'un amour vrai, et à
-                nous aimer les uns les autres sans masque.
-              </p>
-              <ul class="liste-propre">
-                <li>Un accueil chaleureux, dès la porte.</li>
-                <li>Des enseignements clairs, ancrés dans l'Écriture.</li>
-                <li>Un accompagnement pastoral pour les moments difficiles.</li>
-                <li>Une place pour les enfants, les jeunes et les familles.</li>
-              </ul>
-              <a class="link-arrow" href="le-centre.html">Découvrir le Centre</a>
-            </div>
-            <div class="encart encart--or">
-              <p class="verse">
-                « Pour nous, nous l'aimons, parce qu'il nous a aimés le premier. »
-                <cite>1 Jean 4 : 19</cite>
-              </p>
-            </div>
-          </div>
+      <section class="prophete-bloc">
+        <div class="prophete-bloc__photo">
+          <img src="assets/img/prophete-bras-croises.jpg" alt="Le Prophète Daniel Jeff Adou" width="720" height="960" loading="lazy">
+        </div>
+        <div class="prophete-bloc__texte">
+          <blockquote>
+            <p>Une prophétie que tu reçois est une invitation à la prière.</p>
+          </blockquote>
+          <p class="prophete-bloc__nom">Prophète Daniel Jeff Adou</p>
+          <p>Fondateur et pasteur du Centre des Amoureux de Dieu depuis octobre 2023.
+          Son enseignement insiste sur l'amour de Dieu, la vie de prière et le combat
+          spirituel ; il est l'auteur de <em>Sortir des prisons familiales</em>.</p>
+          <a class="lien" href="le-prophete.html">Découvrir son ministère</a>
         </div>
       </section>
 
       <section class="section">
-        <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Enseignements</p>
-            <h2>Les dernières prédications</h2>
-            <p class="lead">
-              Retrouvez les prédications et temps de prière publiés sur la chaîne
-              du ministère, à écouter et à partager.
-            </p>
+        <div class="wrap trio">
+          <div>
+            <h2>Qui nous sommes</h2>
+            <p>« Amoureux de Dieu » n'est pas un titre que l'on se donne : c'est une direction
+            de vie. Notre vision : former des ouvriers, bâtir une armée d'amoureux passionnés
+            pour Dieu et les équiper pour impacter la société.</p>
+            <a class="lien" href="le-centre.html">Notre vision et nos valeurs</a>
           </div>
-          <div class="grille grille--3">
-$videos
-          </div>
-          <p class="section__pied">
-            <a class="btn btn--ghost" href="enseignements.html">Toutes les prédications</a>
-          </p>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="grille grille--2" style="align-items:center;gap:clamp(28px,5vw,64px)">
-            <figure class="portrait" style="margin:0">
-              <img src="assets/img/prophete-bras-croises.jpg" alt="$pasteur"
-                   width="720" height="960" loading="lazy">
-            </figure>
-            <div>
-              <p class="eyebrow">Le Prophète</p>
-              <h2>Une parole portée, pas seulement prononcée.</h2>
-              <p class="lead">
-                Le Centre des Amoureux de Dieu est conduit par le $pasteur, dont
-                l'enseignement est diffusé chaque semaine sur la chaîne du ministère.
-              </p>
-              <p>
-                Sa priorité : une parole compréhensible, fidèle au texte biblique,
-                qui éclaire la vie réelle des personnes.
-              </p>
-              <a class="link-arrow" href="le-prophete.html">Lire sa présentation</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--ink">
-        <div class="wrap">
-          <div class="section__entete section__entete--centre">
-            <p class="eyebrow eyebrow--or" style="color:#EF9C19">Prière</p>
+          <div>
             <h2>Un fardeau à déposer ?</h2>
-            <p class="lead">
-              Notre équipe pastorale prie chaque semaine pour les intentions reçues.
-              Vous pouvez écrire librement : votre demande restera confidentielle.
-            </p>
-            <div class="hero__actions" style="justify-content:center">
-              <a class="btn btn--primary btn--lg" href="priere.html">Envoyer une demande</a>
-              <a class="btn btn--sur-ink btn--lg" href="temoignages.html">Partager un témoignage</a>
-            </div>
+            <p>Santé, famille, travail, mariage, finances : écrivez-nous. L'équipe pastorale
+            prie pour chaque demande, en toute confidentialité.</p>
+            <a class="lien" href="priere.html">Demander une prière</a>
+          </div>
+          <div>
+            <h2>Dieu a agi ?</h2>
+            <p>Guérison, délivrance, restauration : votre témoignage peut fortifier la foi
+            d'un autre. Racontez-nous ce que vous avez vécu.</p>
+            <a class="lien" href="temoignages.html">Partager un témoignage</a>
           </div>
         </div>
       </section>
 
-      <section class="section">
-        <div class="wrap">
-          $cta
-        </div>
-      </section>
+$appel
     </main>
 """)
+
+
+def corps_accueil():
+    return CORPS_ACCUEIL.substitute(
+        adresse=EGLISE["adresse"], maps=EGLISE["maps"], evenements=evenements(),
+        premiere=carte_video(VIDEOS[0]),
+        suivantes="\n".join(carte_video(v) for v in VIDEOS[1:4]),
+        appel=appel(),
+    )
 
 
 CORPS_CENTRE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Qui nous sommes</p>
-          <h1>Une église, une famille, une armée d'amoureux.</h1>
-          <p class="lead">
-            Le Centre des Amoureux de Dieu est une communauté chrétienne établie à
-            $ville, en $pays. Notre raison d'être tient en une phrase : former des
-            ouvriers, bâtir une armée d'amoureux passionnés pour Dieu, et les
-            équiper pour impacter la société.
-          </p>
-        </div>
-      </section>
+$entete
 
-      <section class="section" id="vision">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px);align-items:center">
-            <div>
-              <p class="eyebrow">Notre vision</p>
-              <h2>Former, bâtir, équiper.</h2>
-              <p class="lead">« $vision »</p>
-              <ul class="liste-propre">
-                <li><strong>Former des ouvriers et des serviteurs</strong> — équiper les membres pour le ministère et le service.</li>
-                <li><strong>Bâtir une armée d'amoureux passionnés</strong> — créer un peuple engagé et motivé.</li>
-                <li><strong>Impacter la société</strong> — influencer positivement les familles, les communautés et les nations.</li>
-              </ul>
-            </div>
-            <div class="encart encart--or">
-              <p class="verse">
-                « Le plus petit deviendra un millier, et le moindre, une nation puissante. »
-                <cite>Ésaïe 60 : 22</cite>
-              </p>
-            </div>
+      <section class="section">
+        <div class="wrap colonnes">
+          <div>
+            <h2>Notre vision</h2>
+            <p class="grand">$vision</p>
+          </div>
+          <div>
+            <h2>Notre mission</h2>
+            <p>$mission</p>
+            <ul class="liste">
+              <li>Prédication et enseignement biblique</li>
+              <li>Évangélisation et formation continue</li>
+              <li>Développement de leaders passionnés</li>
+              <li>Implication dans la transformation de la société</li>
+            </ul>
           </div>
         </div>
       </section>
 
-      <section class="section section--alt">
+      <section class="verset">
         <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px);align-items:start">
-            <div>
-              <p class="eyebrow">Notre mission</p>
-              <h2>Comment nous y allons.</h2>
-              <p>« $mission »</p>
-            </div>
-            <div class="carte">
-              <h3>Nos actions concrètes</h3>
-              <ul class="liste-propre mb-0">
-                <li>Prédication et enseignement biblique</li>
-                <li>Évangélisation et formation continue</li>
-                <li>Développement de leaders passionnés</li>
-                <li>Implication dans la transformation de la société</li>
-              </ul>
-            </div>
-          </div>
+          <p>« Le plus petit deviendra un millier, et le moindre une nation puissante. »</p>
+          <cite>Ésaïe 60 : 22</cite>
         </div>
       </section>
 
-      <section class="section" id="valeurs">
+      <section class="section">
         <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Nos valeurs</p>
-            <h2>Les principes qui nous gouvernent</h2>
-            <p class="lead">
-              Six valeurs, chacune rattachée à un texte biblique : elles servent de
-              référence à nos décisions et à nos projets.
-            </p>
+          <div class="tete">
+            <h2>Nos valeurs</h2>
+            <p>Six principes, chacun enraciné dans l'Écriture, qui guident nos décisions.</p>
           </div>
-          <div class="grille grille--3">
+          <dl class="valeurs">
 $valeurs
-          </div>
+          </dl>
         </div>
       </section>
 
-
-      <section class="section">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px);align-items:center">
-            <div>
-              <p class="eyebrow">Le pasteur</p>
-              <h2>$pasteur</h2>
-              <p class="lead">$role</p>
-              <p>
-                Le Centre des Amoureux de Dieu est conduit par le $pasteur, dont
-                l'enseignement est diffusé chaque semaine sur la chaîne du ministère.
-              </p>
-              <a class="link-arrow" href="le-prophete.html">Le présenter en détail</a>
-            </div>
-            <figure class="portrait" style="margin:0">
-              <img src="assets/img/prophete-portrait.jpg" alt="$pasteur"
-                   width="852" height="1150" loading="lazy">
-            </figure>
+      <section class="section section--nuit">
+        <div class="wrap colonnes colonnes--centre">
+          <div>
+            <h2>Notre histoire</h2>
+            <p>Le Centre des Amoureux de Dieu est né en octobre 2023 à Abidjan, à Cocody
+            Riviera 2. Depuis, la communauté se rassemble chaque dimanche, et un mercredi sur
+            deux, autour de la Parole, de la prière et du service. En 2026, l'église a fêté
+            ses trois ans.</p>
+            <a class="btn btn--feu" href="le-prophete.html">Le Prophète Daniel Jeff Adou</a>
           </div>
+          <img class="photo-arrondie" src="assets/img/culte/culte-salle.jpg" alt="La salle et l'estrade du Centre des Amoureux de Dieu" width="1280" height="658" loading="lazy">
         </div>
       </section>
 
-
-      <section class="section">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
-            <div>
-              <h2>Notre histoire</h2>
-              <p>
-                Le Centre des Amoureux de Dieu a été <strong>fondé en octobre
-                2023</strong>, à Abidjan (Cocody Rivera 2). Depuis, la communauté
-                se rassemble chaque dimanche et une semaine sur deux en milieu de
-                semaine, autour de la Parole, de la prière et du service.
-              </p>
-              <div class="etat-vide" style="text-align:left">
-                <p class="tiny mb-0">
-                  Les étapes du développement du ministère — premiers cultes,
-                  campagnes, étapes marquantes — seront ajoutées ici
-                  lorsque la direction les aura communiquées. Aucun récit n'est
-                  inventé.
-                </p>
-              </div>
-            </div>
-            <div>
-              <h2>Nous rendre visite</h2>
-              <div class="carte">
-                <p class="carte__numero">Adresse</p>
-                <p class="mb-0"><strong>$adresse</strong></p>
-                <p class="mb-0">$quartier — $ville</p>
-                <p class="tiny muted espace-haut mb-0">
-                  Culte le dimanche de 14h00 à 18h30. Culte de la Parole le mercredi,
-                  une semaine sur deux, de 19h00 à 21h00.
-                </p>
-              </div>
-              <a class="btn btn--primary espace-haut" href="nous-rejoindre.html">Préparer ma visite</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">$cta</div>
-      </section>
+$appel
     </main>
 """)
 
 
+def corps_centre():
+    valeurs = "\n".join(
+        """            <div>
+              <dt>%s</dt>
+              <dd>%s <span class="ref">%s</span></dd>
+            </div>""" % v for v in VALEURS
+    )
+    return CORPS_CENTRE.substitute(
+        entete=entete("Le Centre", "Une église, une famille, une armée d'amoureux.",
+                      "Une communauté chrétienne établie à Abidjan depuis octobre 2023, "
+                      "pour former des ouvriers et équiper chacun à impacter la société.",
+                      "assets/img/culte/culte-large.jpg"),
+        vision=VISION, mission=MISSION, valeurs=valeurs, appel=appel(),
+    )
+
+
 CORPS_PROPHETE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Le Prophète</p>
-          <h1>$pasteur</h1>
-          <p class="lead">$role</p>
+      <section class="entete entete--prophete">
+        <div class="wrap entete--prophete__grille">
+          <div>
+            <nav class="fil" aria-label="Fil d'Ariane"><a href="index.html">Accueil</a> <span aria-hidden="true">/</span> Le Prophète</nav>
+            <h1>Prophète Daniel Jeff Adou</h1>
+            <p class="entete__intro">Fondateur et pasteur du Centre des Amoureux de Dieu, à Abidjan.</p>
+            <div class="actions">
+              <a class="btn btn--feu" href="$youtube" target="_blank" rel="noopener">Sa chaîne YouTube</a>
+              <a class="btn btn--contour" href="$facebook" target="_blank" rel="noopener">Sa page Facebook</a>
+            </div>
+          </div>
+          <img src="assets/img/prophete-portrait.jpg" alt="Portrait du Prophète Daniel Jeff Adou" width="852" height="1150">
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap colonnes">
+          <div>
+            <h2>Son ministère</h2>
+            <p class="grand">Le Prophète Daniel Jeff Adou a fondé le Centre des Amoureux de Dieu
+            en octobre 2023, avec une conviction : la Parole de Dieu éclaire la vie réelle,
+            ici et maintenant.</p>
+          </div>
+          <div>
+            <p>Son enseignement s'articule autour de trois axes que l'on retrouve dans
+            chacun de ses messages :</p>
+            <ul class="liste">
+              <li><strong>L'amour de Dieu</strong> : comprendre qu'on est aimé avant d'être méritant.</li>
+              <li><strong>La vie de prière</strong> : prier avec constance, en toute saison.</li>
+              <li><strong>Le combat spirituel</strong> : discerner l'origine des combats et les remporter par la prière.</li>
+            </ul>
+            <p>Ses prédications sont diffusées chaque semaine sur la chaîne YouTube du ministère.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--nuit">
+        <div class="wrap livre">
+          <img src="assets/img/livre-sortir-des-prisons.jpg" alt="Couverture du livre Sortir des prisons familiales" width="640" height="907" loading="lazy">
+          <div>
+            <p class="livre__auteur">Le livre du Prophète</p>
+            <h2>Sortir des prisons familiales</h2>
+            <p class="grand">100 prières pour briser les chaînes, renverser les limitations
+            et restaurer ta destinée.</p>
+            <p>Prisons spirituelles, familiales, ancestrales, prisons du nom et du territoire :
+            ce livre explique comment elles se forment, pourquoi elles se transmettent et
+            comment en sortir, avant de conduire le lecteur dans cent prières ciblées.</p>
+            <p class="petit">Le Biographe Édition, Abidjan, 2025.</p>
+            $commander
+          </div>
         </div>
       </section>
 
       <section class="section">
         <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,60px);align-items:start">
-            <div>
-              <h2>Présentation</h2>
-              <p>
-                Le Centre des Amoureux de Dieu est conduit par le $pasteur. Son
-                enseignement est diffusé chaque semaine sur la chaîne du ministère,
-                et porte une conviction simple : la Parole de Dieu éclaire la vie
-                réelle, ici et maintenant.
-              </p>
-              <p>
-                Sa prédication insiste sur l'amour de Dieu, la vie de prière et la
-                transformation du cœur — trois axes que l'on retrouve dans les
-                messages publiés.
-              </p>
-              <div class="etat-vide" style="text-align:left">
-                <h3 style="font-size:1.05rem">Biographie officielle et parcours</h3>
-                <p class="mb-0 tiny">
-                  Les éléments biographiques (date de conversion, parcours
-                  ministériel, ordination, années de service) doivent être fournis
-                  par le Centre. Ils ne sont pas inventés ici : la place est
-                  réservée, le texte viendra du ministère.
-                </p>
-              </div>
-            </div>
-            <div>
-              <figure class="portrait" style="margin:0">
-                <img src="assets/img/prophete-portrait.jpg" alt="$pasteur"
-                     width="852" height="1150" loading="lazy">
-              </figure>
-              <a class="btn btn--primary espace-haut" href="$youtube" target="_blank" rel="noopener" style="width:100%">
-                Voir sa chaîne YouTube
-              </a>
-            </div>
+          <div class="tete tete--ligne">
+            <h2>Ses derniers messages</h2>
+            <a class="lien" href="enseignements.html">Toutes les prédications</a>
           </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Ses messages</p>
-            <h2>Les dernières prédications</h2>
-            <p class="lead">Vidéos publiées sur la chaîne officielle du ministère.</p>
-          </div>
-          <div class="grille grille--3">
+          <div class="grille-videos">
 $videos
           </div>
         </div>
       </section>
 
-      <section class="section">
-        <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Son ministère</p>
-            <h2>Ce qui caractérise le ministère</h2>
-          </div>
-          <div class="grille grille--3">
-            <article class="carte">
-              <p class="carte__numero">01</p>
-              <h3>L'amour de Dieu</h3>
-              <p class="tiny muted mb-0">Comprendre qu'on est aimé avant d'être méritant.</p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">02</p>
-              <h3>La vie de prière</h3>
-              <p class="tiny muted mb-0">Prier simplement, avec constance, en toute saison.</p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">03</p>
-              <h3>La transformation</h3>
-              <p class="tiny muted mb-0">Passer de l'émotion du moment à un changement durable.</p>
-            </article>
-          </div>
-        </div>
+      <section class="galerie-bande" aria-label="Photos">
+        <img src="assets/img/prophete-face.jpg" alt="Le Prophète Daniel Jeff Adou, portrait" width="720" height="960" loading="lazy">
+        <img src="assets/img/culte/culte-proche.jpg" alt="Le Prophète prêche pendant le culte" width="1280" height="658" loading="lazy">
+        <img src="assets/img/culte/culte-assemblee.jpg" alt="Le Prophète s'adresse à l'assemblée" width="1280" height="658" loading="lazy">
       </section>
 
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Photographies officielles</p>
-            <h2>Le Prophète en images</h2>
-          </div>
-          <div class="galerie-portraits">
-            <img src="assets/img/prophete-portrait.jpg" alt="Portrait officiel du $pasteur"
-                 width="852" height="1150" loading="lazy">
-            <img src="assets/img/prophete-face.jpg" alt="Le $pasteur, portrait de face"
-                 width="720" height="960" loading="lazy">
-            <img src="assets/img/prophete-bras-croises.jpg" alt="Le $pasteur, bras croisés"
-                 width="720" height="960" loading="lazy">
-          </div>
-          <div class="grille grille--2 espace-haut" style="gap:clamp(24px,4vw,48px)">
-            <div class="etat-vide">
-              <h3>Photos du Centre</h3>
-              <p class="tiny mb-0">
-                Les photographies du lieu, des cultes et des événements doivent être
-                fournies en haute définition. Aucune image de substitution n'est
-                utilisée.
-              </p>
-            </div>
-            <div class="etat-vide">
-              <h3>Actualités liées à ses interventions</h3>
-              <p class="tiny mb-0">
-                Les annonces (campagnes, conventions, conférences) seront publiées
-                ici dès qu'elles seront communiquées par le secrétariat.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">$cta</div>
-      </section>
+$appel
     </main>
 """)
+
+
+def corps_prophete():
+    return CORPS_PROPHETE.substitute(
+        youtube=EGLISE["youtube"], facebook=PROPHETE["facebook"],
+        videos="\n".join(carte_video(v) for v in VIDEOS[:3]),
+        commander=bouton_whatsapp("Bonjour, je souhaite me procurer le livre « Sortir des prisons familiales » du Prophète Jeff Adou.",
+                                  "Se procurer le livre"),
+        appel=appel(),
+    )
 
 
 CORPS_PROGRAMMES = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Nos programmes</p>
-          <h1>Venez vivre un culte avec nous.</h1>
-          <p class="lead">
-            Chaque semaine, nous nous rassemblons pour adorer Dieu, écouter sa
-            Parole et prier les uns pour les autres. Voici nos rendez-vous.
-          </p>
-        </div>
-      </section>
-
-      <section class="section" id="cultes">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
-            <div>
-              <p class="eyebrow">Cultes réguliers</p>
-              <h2>Nos horaires</h2>
-              <div class="programme">
-$creneaux
-              </div>
-              <p class="tiny muted espace-haut">
-                Les horaires exacts sont communiqués par le secrétariat du Centre.
-              </p>
-            </div>
-            <div>
-              <p class="eyebrow">Nous trouver</p>
-              <h2>Le lieu</h2>
-              <div class="carte">
-                <p class="carte__numero">Adresse</p>
-                <p><strong>$adresse</strong></p>
-                <p class="mb-0">Ville : <strong>$ville</strong> — $pays</p>
-                <p class="tiny muted espace-haut mb-0">
-                  Un plan d'accès sera publié dès que l'adresse complète sera fournie.
-                </p>
-              </div>
-              <div class="carte espace-haut">
-                <p class="carte__numero">Contact</p>
-                <p class="mb-0">Téléphone : <strong>$telephone</strong></p>
-                <p class="mb-0">WhatsApp : <strong>$whatsapp</strong></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Déroulement</p>
-            <h2>Comment se passe un culte</h2>
-            <p class="lead">Environ deux heures, dans une atmosphère simple et respectueuse.</p>
-          </div>
-          <div class="grille grille--4">
-            <article class="carte">
-              <p class="carte__numero">1</p><h3>Accueil</h3>
-              <p class="tiny muted mb-0">Vous êtes reçu à l'entrée et orienté vers une place.</p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">2</p><h3>Louange</h3>
-              <p class="tiny muted mb-0">Un temps de chants et d'adoration, ouvert à tous.</p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">3</p><h3>Parole</h3>
-              <p class="tiny muted mb-0">L'enseignement du message, avec des notes si vous le souhaitez.</p>
-            </article>
-            <article class="carte">
-              <p class="carte__numero">4</p><h3>Prière</h3>
-              <p class="tiny muted mb-0">Un temps de prière personnel pour ceux qui le désirent.</p>
-            </article>
-          </div>
-        </div>
-      </section>
+$entete
 
       <section class="section">
+        <div class="wrap colonnes">
+          <div>
+            <h2>Nos cultes</h2>
+            <div class="horaires">
+$horaires
+            </div>
+            <p class="petit">Le culte de la Parole du mercredi a lieu une semaine sur deux :
+            renseignez-vous au $telephone.</p>
+          </div>
+          <div>
+            <h2>Comment se passe un culte</h2>
+            <ol class="etapes">
+              <li><strong>Accueil.</strong> Vous êtes reçu à l'entrée et installé.</li>
+              <li><strong>Louange et adoration.</strong> Un temps de chants, ouvert à tous.</li>
+              <li><strong>La Parole.</strong> L'enseignement du message du jour.</li>
+              <li><strong>Prière.</strong> Un temps de prière pour ceux qui le désirent.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--nuit">
         <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Temps forts</p>
-            <h2>Programmes spéciaux et événements</h2>
-            <p class="lead">
-              Veillées, séminaires, conférences, campagnes spirituelles : chaque
-              événement aura sa fiche — titre, description, image, date, heure,
-              lieu, informations pratiques, inscription si nécessaire.
-            </p>
+          <div class="tete">
+            <h2>Temps forts</h2>
+            <p>Jeûnes, nuits de prière, conférences : les prochains rendez-vous du Centre.</p>
+          </div>
+          <div class="evenements">
+$evenements
           </div>
           <div class="agenda" data-agenda hidden></div>
-          <div class="etat-vide" data-agenda-vide>
-            <h3>Aucune affiche publiée pour l'instant</h3>
-            <p class="tiny mb-0">
-              Le secrétariat publie ici les veillées, séminaires, conventions et
-              campagnes, avec leur affiche, dès qu'elles sont programmées.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(24px,4vw,48px)">
-            <div class="carte">
-              <h2 style="font-size:1.6rem">C'est votre première fois ?</h2>
-              <ul class="liste-propre mb-0">
-                <li>Venez tel que vous êtes : aucune tenue particulière n'est exigée.</li>
-                <li>Arrivez dix minutes avant pour être installé sans précipitation.</li>
-                <li>Signalez-vous à l'accueil si vous souhaitez être accompagné.</li>
-                <li>Les enfants sont les bienvenus.</li>
-              </ul>
-            </div>
-            <div class="carte">
-              <h2 style="font-size:1.6rem">Vous souhaitez visiter le Centre ?</h2>
-              <p>Signalez votre venue : l'équipe vous accueillera et vous guidera.</p>
-              <a class="btn btn--primary" href="nous-rejoindre.html#visite">Je souhaite visiter</a>
-            </div>
-          </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="wrap">$cta</div>
+        <div class="wrap colonnes">
+          <div>
+            <h2>C'est votre première fois ?</h2>
+            <ul class="liste">
+              <li>Venez tel que vous êtes : aucune tenue particulière n'est exigée.</li>
+              <li>Arrivez dix minutes avant pour être installé sans précipitation.</li>
+              <li>Signalez-vous à l'accueil si vous souhaitez être accompagné.</li>
+              <li>Les enfants sont les bienvenus.</li>
+            </ul>
+          </div>
+          <div>
+            <h2>Prévenir de votre venue</h2>
+            <p>Dites-nous quand vous venez : l'équipe d'accueil vous attendra.</p>
+            $visite
+          </div>
+        </div>
       </section>
+
+$appel
     </main>
 """)
 
 
+def corps_programmes():
+    return CORPS_PROGRAMMES.substitute(
+        entete=entete("Programmes", "Venez vivre un culte avec nous.",
+                      "Chaque dimanche après-midi et un mercredi soir sur deux, nous nous "
+                      "rassemblons pour adorer Dieu, écouter Sa Parole et prier ensemble.",
+                      "assets/img/culte/culte-predication.jpg"),
+        horaires=lignes_horaires(), telephone=EGLISE["telephone"], evenements=evenements(),
+        visite=bouton_whatsapp("Bonjour, je souhaite venir au culte du Centre des Amoureux de Dieu.",
+                               "Prévenir sur WhatsApp"),
+        appel=appel(),
+    )
+
+
 CORPS_ENSEIGNEMENTS = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Prédications et enseignements</p>
-          <h1>Écouter, comprendre, mettre en pratique.</h1>
-          <p class="lead">
-            La bibliothèque des messages publiés sur la chaîne du ministère.
-            Chaque vidéo se lance uniquement si vous cliquez : aucun cookie n'est
-            déposé avant votre accord.
-          </p>
-        </div>
-      </section>
+$entete
 
       <section class="section">
         <div class="wrap">
           <div class="filtres" role="search">
             <label class="sr-only" for="recherche">Rechercher une prédication</label>
-            <input id="recherche" type="search" placeholder="Rechercher un titre…" data-recherche>
-            <button class="puce" type="button" data-filtre="tous" aria-pressed="true">Tout</button>
+            <input id="recherche" type="search" placeholder="Rechercher un titre" data-recherche>
+            <div class="filtres__puces">
+              <button class="puce" type="button" data-filtre="tous" aria-pressed="true">Tout</button>
 $puces
-            <span class="compteur-resultats" data-compteur>$total messages</span>
+            </div>
+            <span class="compteur" data-compteur>$total messages</span>
           </div>
-
-          <div class="grille grille--3" data-liste>
+          <div class="grille-videos" data-liste>
 $videos
           </div>
-
-          <div class="etat-vide espace-haut" data-aucun-resultat hidden>
-            <h3>Aucun message ne correspond</h3>
-            <p class="tiny mb-0">Essayez un autre mot-clé ou revenez à « Tout ».</p>
-          </div>
-
-          <p class="section__pied">
-            <a class="btn btn--primary" href="$youtube" target="_blank" rel="noopener">
-              Voir toute la chaîne YouTube
-            </a>
-          </p>
+          <p class="vide" data-aucun-resultat hidden>Aucun message ne correspond à cette recherche.
+          Essayez un autre mot, ou revenez à « Tout ».</p>
+          <p class="centre"><a class="btn btn--contour-sombre" href="$youtube" target="_blank" rel="noopener">Toute la chaîne YouTube</a></p>
         </div>
       </section>
 
-      <section class="section section--alt">
+      <section class="verset">
         <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
-            <div>
-              <p class="eyebrow">Sur quoi nous enseignons</p>
-              <h2>Les grands axes</h2>
-              <ul class="liste-propre">
-                <li><strong>L'amour de Dieu</strong> — comprendre qu'on est aimé avant d'être méritant.</li>
-                <li><strong>La vie de prière</strong> — prier simplement, avec constance.</li>
-                <li><strong>La croissance spirituelle</strong> — passer de l'émotion à la transformation.</li>
-                <li><strong>Le service</strong> — aimer concrètement, dans la famille et au travail.</li>
-              </ul>
-            </div>
-            <div class="encart encart--or">
-              <p class="verse">
-                « Ta parole est une lampe à mes pieds, et une lumière sur mon sentier. »
-                <cite>Psaume 119 : 105</cite>
-              </p>
-            </div>
-          </div>
+          <p>« Ta parole est une lampe à mes pieds, et une lumière sur mon sentier. »</p>
+          <cite>Psaume 119 : 105</cite>
         </div>
       </section>
-
-      <section class="section">
-        <div class="wrap">$cta</div>
-      </section>
+$appel
     </main>
 """)
 
 
+def puces():
+    return "\n".join(
+        '              <button class="puce" type="button" data-filtre="%s" aria-pressed="false">%s</button>' % (g, g)
+        for g in GENRES
+    )
+
+
+def corps_enseignements():
+    return CORPS_ENSEIGNEMENTS.substitute(
+        entete=entete("Prédications", "Écouter, comprendre, mettre en pratique.",
+                      "Les messages du Prophète Daniel Jeff Adou, publiés sur la chaîne du ministère.",
+                      "assets/img/culte/culte-assemblee.jpg"),
+        puces=puces(), total=len(VIDEOS), videos="\n".join(carte_video(v) for v in VIDEOS),
+        youtube=EGLISE["youtube"], appel=appel(),
+    )
+
+
 CORPS_MEDIATHEQUE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Médiathèque</p>
-          <h1>Les images du ministère.</h1>
-          <p class="lead">
-            Les visuels ci-dessous proviennent des vidéos officielles de la chaîne
-            du ministère. Les photographies du Centre, des cultes et des événements
-            seront ajoutées dès qu'elles seront fournies.
-          </p>
+$entete
+
+      <section class="section">
+        <div class="wrap">
+          <h2>Au culte</h2>
+          <div class="mosaique">
+$photos
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--nuit">
+        <div class="wrap">
+          <h2>Affiches</h2>
+          <div class="affiches">
+$affiches
+          </div>
+          <div class="affiches" data-affiches hidden></div>
         </div>
       </section>
 
       <section class="section">
         <div class="wrap">
-          <div class="filtres">
-            <button class="puce" type="button" data-filtre="tous" aria-pressed="true">Tout</button>
-$puces
-            <span class="compteur-resultats" data-compteur>$total visuels</span>
+          <div class="tete tete--ligne">
+            <h2>En vidéo</h2>
+            <a class="lien" href="enseignements.html">Toutes les prédications</a>
           </div>
-
-          <div class="galerie" data-liste>
-$galerie
-          </div>
-
-          <div class="section__entete espace-haut">
-            <p class="eyebrow">Affiches</p>
-            <h2>Affiches des veillées et événements</h2>
-          </div>
-          <div class="galerie" data-affiches hidden></div>
-
-          <div class="etat-vide espace-haut">
-            <h3>Albums photographiques à venir</h3>
-            <p class="tiny mb-0">
-              Cultes, séminaires, conférences, veillées, actions sociales : chaque
-              album sera publié après l'accord des personnes photographiées.
-            </p>
+          <div class="grille-videos">
+$videos
           </div>
         </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="section__entete section__entete--centre">
-            <h2>Chaque image a une origine vérifiable</h2>
-            <p class="lead">
-              Aucune photographie de substitution n'est utilisée sur ce site. Une
-              image affichée ici provient soit d'une vidéo du ministère, soit d'un
-              fichier fourni par le Centre.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">$cta</div>
       </section>
     </main>
 
@@ -1160,144 +850,116 @@ $galerie
 """)
 
 
+def corps_mediatheque():
+    photos = "\n".join(
+        """            <button type="button" data-image="assets/img/culte/%s.jpg" data-legende="%s">
+              <img src="assets/img/culte/%s.jpg" alt="%s" width="1280" height="658" loading="lazy">
+            </button>""" % (f, attr(l), f, attr(l))
+        for f, l in PHOTOS_CULTE
+    )
+    affiches = "\n".join(
+        """            <button type="button" data-image="%s" data-legende="%s">
+              <img src="%s" alt="Affiche : %s" width="900" height="1114" loading="lazy">
+            </button>""" % (e["affiche"], attr(e["titre"] + ", " + e["quand"]), e["affiche"], attr(e["titre"]))
+        for e in EVENEMENTS
+    )
+    return CORPS_MEDIATHEQUE.substitute(
+        entete=entete("Médiathèque", "La vie du Centre en images.",
+                      "Cultes, affiches et prédications du Centre des Amoureux de Dieu.",
+                      "assets/img/culte/culte-proche.jpg"),
+        photos=photos, affiches=affiches, videos="\n".join(carte_video(v) for v in VIDEOS[:6]),
+    )
+
+
+T_CASE = Template("""              <div class="champ">
+                <label>
+                  <input type="checkbox" name="$nom" required>
+                  <span>$texte</span>
+                </label>
+              </div>""")
+
 CORPS_TEMOIGNAGES = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Témoignages</p>
-          <h1>Ce que Dieu a fait mérite d'être raconté.</h1>
-          <p class="lead">
-            Guérison, délivrance, provision, restauration familiale : partagez ce
-            que vous avez vécu. Chaque témoignage est lu, vérifié, puis validé par
-            l'équipe avant publication.
-          </p>
-        </div>
-      </section>
+$entete
 
       <section class="section">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
-            <div>
-              <h2>Partager mon témoignage</h2>
-              <form class="formulaire" data-mailto="$email" data-api="temoignage" data-sujet="Témoignage — site du Centre">
-                <div class="champ--duo">
-                  <div class="champ">
-                    <label for="t-nom">Nom ou pseudonyme</label>
-                    <input id="t-nom" name="nom" type="text" required>
-                  </div>
-                  <div class="champ">
-                    <label for="t-titre">Titre du témoignage</label>
-                    <input id="t-titre" name="titre" type="text" required>
-                  </div>
+        <div class="wrap colonnes colonnes--form">
+          <div>
+            <h2>Partager mon témoignage</h2>
+            <form class="formulaire" data-whatsapp="$whatsapp" data-api="temoignage" data-sujet="Témoignage">
+              <div class="champ-duo">
+                <div class="champ">
+                  <label for="t-nom">Nom ou prénom</label>
+                  <input id="t-nom" name="nom" type="text" required>
                 </div>
                 <div class="champ">
-                  <label for="t-texte">Votre témoignage</label>
-                  <textarea id="t-texte" name="texte" required minlength="40"></textarea>
-                  <span class="aide">Racontez ce qui s'est passé, et ce que cela a changé pour vous.</span>
+                  <label for="t-titre">Titre du témoignage</label>
+                  <input id="t-titre" name="titre" type="text" placeholder="Ex. Dieu a guéri ma mère" required>
                 </div>
-                <div class="champ">
-                  <label for="t-identite">Identité affichée</label>
-                  <select id="t-identite" name="identite">
-                    <option>Afficher mon nom</option>
-                    <option>Afficher uniquement mon prénom</option>
-                    <option>Rester anonyme</option>
-                  </select>
-                </div>
-                <div class="champ">
-                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
-                    <input type="checkbox" name="autorisation" required style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
-                    <span class="tiny">J'autorise la publication de mon témoignage après validation par l'équipe du Centre.</span>
-                  </label>
-                </div>
-                <div class="champ">
-                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
-                    <input type="checkbox" name="photo" style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
-                    <span class="tiny">Je souhaite joindre une photo (à ajouter en pièce jointe dans votre messagerie).</span>
-                  </label>
-                </div>
-                <button class="btn btn--primary btn--lg" type="submit">Préparer mon message</button>
-                <p class="note-formulaire" data-avis hidden role="status"></p>
-                <p class="note-formulaire">
-                  Aucun témoignage n'est publié automatiquement : le site ne fait
-                  que préparer votre message.
-                </p>
-              </form>
-            </div>
-            <div>
-              <div class="carte">
-                <h3>Comment ça se passe</h3>
-                <ol class="liste-propre mb-0">
-                  <li>Vous envoyez votre message.</li>
-                  <li>L'équipe le lit et vous contacte si besoin.</li>
-                  <li>Après accord, il est publié sur cette page.</li>
-                </ol>
               </div>
-              <div class="encart encart--or espace-haut">
-                <p class="verse">
-                  « Revenez à votre maison, et racontez tout ce que Dieu a fait pour vous. »
-                  <cite>Luc 8 : 39</cite>
-                </p>
+              <div class="champ">
+                <label for="t-texte">Votre témoignage</label>
+                <textarea id="t-texte" name="texte" required minlength="40"></textarea>
               </div>
-            </div>
+              <div class="champ">
+                <label for="t-identite">Sur le site, afficher</label>
+                <select id="t-identite" name="identite">
+                  <option>Mon nom</option>
+                  <option>Mon prénom seulement</option>
+                  <option>Rien (anonyme)</option>
+                </select>
+              </div>
+$case
+              <button class="btn btn--feu" type="submit">Envoyer mon témoignage</button>
+              <p class="avis" data-avis hidden role="status"></p>
+            </form>
           </div>
+          <aside class="aparte">
+            <h3>Ce qui se passe ensuite</h3>
+            <ol class="etapes etapes--petit">
+              <li>Votre témoignage arrive au Centre sur WhatsApp.</li>
+              <li>L'équipe le lit et vous recontacte si besoin.</li>
+              <li>Avec votre accord, il est publié sur cette page.</li>
+            </ol>
+            <blockquote class="aparte__verset">« Retourne dans ta maison, et raconte tout ce que Dieu t'a fait. » <cite>Luc 8 : 39</cite></blockquote>
+          </aside>
         </div>
       </section>
 
-      <section class="section section--alt">
+      <section class="section section--sable" data-temoignages-bloc hidden>
         <div class="wrap">
-          <div class="section__entete">
-            <p class="eyebrow">Ils ont témoigné</p>
-            <h2>Témoignages publiés</h2>
-          </div>
-          <div class="grille grille--2" data-temoignages hidden></div>
-          <div class="etat-vide" data-temoignages-vide>
-            <h3>Aucun témoignage publié pour l'instant</h3>
-            <p class="tiny mb-0">
-              Les témoignages validés apparaîtront ici, avec l'identité choisie par
-              chacun. Rien n'est publié sans accord explicite.
-            </p>
-          </div>
+          <h2>Ils ont témoigné</h2>
+          <div class="temoignages" data-temoignages></div>
         </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">$cta</div>
       </section>
     </main>
 """)
 
 
+def corps_temoignages():
+    return CORPS_TEMOIGNAGES.substitute(
+        entete=entete("Témoignages", "Ce que Dieu a fait mérite d'être raconté.",
+                      "Guérison, délivrance, provision, restauration familiale : partagez ce que vous avez vécu.",
+                      "assets/img/culte/culte-assemblee.jpg"),
+        whatsapp=EGLISE["whatsapp"],
+        case=T_CASE.substitute(nom="autorisation", texte="J'autorise la publication de mon témoignage après relecture par l'équipe du Centre."),
+    )
+
+
 CORPS_PRIERE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Demande de prière</p>
-          <h1>Déposez ce qui pèse sur votre cœur.</h1>
-          <p class="lead">
-            Santé, famille, travail, mariage, études, finances : écrivez-nous.
-            Une personne de l'équipe pastorale priera pour votre intention.
-          </p>
-        </div>
-      </section>
+$entete
 
       <section class="section">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
-            <div>
-              <h2>Écrire une demande</h2>
-              <form class="formulaire" data-mailto="$email" data-api="priere" data-sujet="Demande de prière — site du Centre">
-                <div class="champ--duo">
-                  <div class="champ">
-                    <label for="p-nom">Nom ou pseudonyme</label>
-                    <input id="p-nom" name="nom" type="text" required>
-                  </div>
-                  <div class="champ">
-                    <label for="p-contact">E-mail ou téléphone <span class="aide">(facultatif)</span></label>
-                    <input id="p-contact" name="contact" type="text">
-                  </div>
+        <div class="wrap colonnes colonnes--form">
+          <div>
+            <h2>Écrire une demande</h2>
+            <form class="formulaire" data-whatsapp="$whatsapp" data-api="priere" data-sujet="Demande de prière">
+              <div class="champ-duo">
+                <div class="champ">
+                  <label for="p-nom">Nom ou prénom</label>
+                  <input id="p-nom" name="nom" type="text" required>
                 </div>
                 <div class="champ">
-                  <label for="p-categorie">Catégorie</label>
+                  <label for="p-categorie">Sujet</label>
                   <select id="p-categorie" name="categorie">
                     <option>Famille</option>
                     <option>Santé</option>
@@ -1305,972 +967,447 @@ $fil
                     <option>Mariage</option>
                     <option>Études et concours</option>
                     <option>Finances</option>
+                    <option>Délivrance</option>
                     <option>Vie spirituelle</option>
-                    <option>Autre situation</option>
-                  </select>
-                </div>
-                <div class="champ">
-                  <label for="p-sujet">Sujet de prière</label>
-                  <input id="p-sujet" name="sujet" type="text" placeholder="En quelques mots" required>
-                </div>
-                <div class="champ">
-                  <label for="p-message">Votre demande</label>
-                  <textarea id="p-message" name="message" required></textarea>
-                </div>
-                <div class="champ">
-                  <label for="p-confidentialite">Confidentialité</label>
-                  <select id="p-confidentialite" name="confidentialite">
-                    <option>Strictement confidentielle (équipe pastorale uniquement)</option>
-                    <option>Peut être partagée en réunion de prière, sans mon nom</option>
-                  </select>
-                </div>
-                <div class="champ">
-                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
-                    <input type="checkbox" name="consentement" required style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
-                    <span class="tiny">J'accepte que ces informations soient transmises à l'équipe pastorale pour être priées.</span>
-                  </label>
-                </div>
-                <button class="btn btn--primary btn--lg" type="submit">Préparer mon message</button>
-                <p class="note-formulaire" data-avis hidden role="status"></p>
-                <p class="note-formulaire">
-                  Ce formulaire ouvre votre messagerie avec le message pré-rempli :
-                  rien n'est stocké sur le site.
-                </p>
-              </form>
-            </div>
-            <div>
-              <div class="carte">
-                <h3>Ce que devient votre demande</h3>
-                <ul class="liste-propre mb-0">
-                  <li>Elle est lue par une personne de l'équipe pastorale.</li>
-                  <li>Elle n'est jamais publiée ni rendue publique.</li>
-                  <li>Elle n'est pas partagée sans votre accord.</li>
-                  <li>Vous pouvez demander sa suppression à tout moment.</li>
-                </ul>
-              </div>
-              <div class="encart encart--or espace-haut">
-                <p class="verse">
-                  « Ne vous inquiétez de rien ; mais en toute chose faites connaître
-                  vos besoins à Dieu par des prières et des supplications, avec des
-                  actions de grâces. »
-                  <cite>Philippiens 4 : 6</cite>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--ink">
-        <div class="wrap">
-          <div class="section__entete section__entete--centre">
-            <h2>La prière n'est pas un dernier recours.</h2>
-            <p class="lead">
-              Elle est le premier geste de celui qui choisit de faire confiance à Dieu.
-            </p>
-          </div>
-        </div>
-      </section>
-    </main>
-""")
-
-
-CORPS_REJOINDRE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Nous rejoindre</p>
-          <h1>Venir au Centre.</h1>
-          <p class="lead">
-            Adresse, horaires, contacts et itinéraire : tout ce qu'il faut pour
-            préparer votre première visite.
-          </p>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
-            <div>
-              <h2>Nous trouver</h2>
-              <div class="carte">
-                <p class="carte__numero">Adresse officielle</p>
-                <p><strong>$adresse</strong></p>
-                <p class="mb-0">Quartier : <strong>$quartier</strong></p>
-                <p class="mb-0">Ville : <strong>$ville</strong> — $pays</p>
-              </div>
-              <div class="carte espace-haut">
-                <p class="carte__numero">Contact</p>
-                <p class="mb-0">Téléphone : <strong>$telephone</strong></p>
-                <p class="mb-0">WhatsApp : <strong>$whatsapp</strong></p>
-                <p class="mb-0">E-mail : <strong><a href="mailto:$email">$email</a></strong></p>
-                <p class="tiny muted espace-haut mb-0">
-                  L'adresse e-mail est provisoire et sera remplacée par l'adresse officielle.
-                </p>
-              </div>
-              <div class="carte espace-haut">
-                <h3>Plan d'accès</h3>
-                <p class="tiny muted">
-                  Nous sommes à Cocody Rivera 2, en face de l'imprimerie DA
-                  Communication.
-                </p>
-                <a class="btn btn--ghost" target="_blank" rel="noopener"
-                   href="https://www.google.com/maps/search/?api=1&amp;query=Cocody+Rivera+2+imprimerie+DA+Communication+Abidjan">
-                  Ouvrir l'itinéraire dans Google Maps
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <h2>Horaires des cultes</h2>
-              <div class="programme">
-$creneaux
-              </div>
-
-              <div class="carte espace-haut" id="visite">
-                <h3>Je souhaite visiter le Centre</h3>
-                <p class="tiny muted">
-                  Laissez vos coordonnées : l'équipe vous accueillera et vous
-                  indiquera le lieu exact et l'heure.
-                </p>
-                <form class="formulaire" data-mailto="$email" data-sujet="Je souhaite visiter le Centre">
-                  <div class="champ">
-                    <label for="v-nom">Nom</label>
-                    <input id="v-nom" name="nom" type="text" required>
-                  </div>
-                  <div class="champ">
-                    <label for="v-tel">Téléphone ou WhatsApp</label>
-                    <input id="v-tel" name="telephone" type="tel" required>
-                  </div>
-                  <div class="champ">
-                    <label for="v-date">Date envisagée <span class="aide">(facultatif)</span></label>
-                    <input id="v-date" name="date" type="date">
-                  </div>
-                  <div class="champ">
-                    <label for="v-nb">Nombre de personnes</label>
-                    <input id="v-nb" name="personnes" type="number" min="1" value="1">
-                  </div>
-                  <button class="btn btn--primary" type="submit">Préparer ma demande</button>
-                  <p class="note-formulaire" data-avis hidden role="status"></p>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="grille grille--2" style="gap:clamp(28px,5vw,56px);align-items:start">
-            <div>
-              <h2>Écrire un message</h2>
-              <form class="formulaire" data-mailto="$email" data-sujet="Message depuis le site du Centre">
-                <div class="champ--duo">
-                  <div class="champ">
-                    <label for="c-nom">Nom</label>
-                    <input id="c-nom" name="nom" type="text" autocomplete="name" required>
-                  </div>
-                  <div class="champ">
-                    <label for="c-tel">Téléphone</label>
-                    <input id="c-tel" name="tel" type="tel" autocomplete="tel">
-                  </div>
-                </div>
-                <div class="champ">
-                  <label for="c-email">E-mail</label>
-                  <input id="c-email" name="email" type="email" autocomplete="email" required>
-                </div>
-                <div class="champ">
-                  <label for="c-objet">Objet</label>
-                  <select id="c-objet" name="objet">
-                    <option>Question sur les cultes</option>
-                    <option>Demande de visite</option>
-                    <option>Accompagnement pastoral</option>
-                    <option>Faire un don</option>
                     <option>Autre</option>
                   </select>
                 </div>
-                <div class="champ">
-                  <label for="c-msg">Message</label>
-                  <textarea id="c-msg" name="message" required></textarea>
-                </div>
-                <button class="btn btn--primary btn--lg" type="submit">Préparer mon message</button>
-                <p class="note-formulaire" data-avis hidden role="status"></p>
-              </form>
-            </div>
-            <div>
-              <div class="carte">
-                <h3>Nous écrire sur les réseaux</h3>
-                <p class="tiny muted mb-0">Facebook : $facebook</p>
-                <p class="tiny muted mb-0">Instagram : $instagram</p>
-                <p class="tiny muted mb-0">TikTok : $tiktok</p>
-                <p class="tiny muted mb-0">YouTube : <a href="$youtube" target="_blank" rel="noopener">chaîne du ministère</a></p>
               </div>
-              <div class="encart encart--or espace-haut">
-                <p class="verse">
-                  « Car là où deux ou trois sont assemblés en mon nom, je suis au
-                  milieu d'eux. »
-                  <cite>Matthieu 18 : 20</cite>
-                </p>
+              <div class="champ">
+                <label for="p-message">Votre demande</label>
+                <textarea id="p-message" name="message" required placeholder="Décrivez la situation pour laquelle vous souhaitez que l'on prie."></textarea>
               </div>
-            </div>
+              <div class="champ">
+                <label for="p-confidentialite">Confidentialité</label>
+                <select id="p-confidentialite" name="confidentialite">
+                  <option>Équipe pastorale uniquement</option>
+                  <option>Peut être portée en réunion de prière, sans mon nom</option>
+                </select>
+              </div>
+$case
+              <button class="btn btn--feu" type="submit">Envoyer ma demande</button>
+              <p class="avis" data-avis hidden role="status"></p>
+            </form>
           </div>
-        </div>
-      </section>
-    </main>
-""")
-
-
-CORPS_DONS = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Soutenir l'œuvre</p>
-          <h1>Donner, c'est participer.</h1>
-          <p class="lead">
-            Vos dons soutiennent les cultes, les actions sociales et
-            l'accompagnement des personnes. Chaque contribution a un usage concret.
-          </p>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">
-          <div class="grille grille--3">
-            <article class="carte">
-              <div class="carte__icone" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>
-              </div>
-              <h3>Mobile Money</h3>
-              <p class="tiny muted">Le numéro marchand du Centre sera publié ici.</p>
-              <p class="tiny mb-0"><strong>$mobilemoney</strong></p>
-            </article>
-            <article class="carte">
-              <div class="carte__icone carte__icone--or" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v7m4-7v7m6-7v7m4-7v7"/><path d="M3 20h18"/></svg>
-              </div>
-              <h3>Virement bancaire</h3>
-              <p class="tiny muted">Les coordonnées bancaires officielles seront ajoutées.</p>
-              <p class="tiny mb-0"><strong>$iban</strong></p>
-            </article>
-            <article class="carte">
-              <div class="carte__icone" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.4-7 10-7 10Z"/></svg>
-              </div>
-              <h3>Sur place</h3>
-              <p class="tiny muted">Une urne est disponible lors des cultes.</p>
-              <p class="tiny mb-0"><strong>À chaque culte</strong></p>
-            </article>
-          </div>
-
-          <div class="encart espace-haut">
-            <h3>À quoi servent vos dons</h3>
-            <ul class="liste-propre mb-0">
-              <li>Le fonctionnement des cultes et des activités de l'église.</li>
-              <li>L'accompagnement des personnes en difficulté.</li>
-              <li>Les actions sociales et les projets du Centre.</li>
+          <aside class="aparte">
+            <h3>Votre demande est entre de bonnes mains</h3>
+            <ul class="liste">
+              <li>Elle est lue et portée dans la prière par l'équipe pastorale.</li>
+              <li>Elle n'est jamais publiée.</li>
+              <li>Vous pouvez demander à être rappelé.</li>
             </ul>
-          </div>
-
-          <div class="etat-vide espace-haut">
-            <h3>Le paiement en ligne n'est pas encore activé</h3>
-            <p class="tiny mb-0">
-              Un paiement Mobile Money en ligne exige un compte marchand auprès d'un
-              prestataire agréé et une vérification de la transaction côté serveur.
-              Tant que ce dispositif n'est pas en place, ce site n'encaisse rien et
-              n'enregistre aucune donnée bancaire.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section--alt">
-        <div class="wrap">
-          <div class="grille grille--2" style="align-items:center;gap:clamp(24px,4vw,48px)">
-            <div class="encart encart--or" style="background:var(--surface)">
-              <p class="verse">
-                « Que chacun donne comme il l'a résolu en son cœur, sans tristesse
-                ni contrainte ; car Dieu aime celui qui donne avec joie. »
-                <cite>2 Corinthiens 9 : 7</cite>
-              </p>
-            </div>
-            <div>
-              <h2 style="font-size:1.7rem">Une question sur les dons ?</h2>
-              <p class="muted">
-                Pour un reçu, un don affecté à un projet ou une précision sur les
-                moyens de paiement, contactez le secrétariat.
-              </p>
-              <a class="btn btn--ghost" href="nous-rejoindre.html">Contacter le secrétariat</a>
-            </div>
-          </div>
+            <blockquote class="aparte__verset">« Ne vous inquiétez de rien ; mais en toute chose faites connaître vos besoins à Dieu par des prières et des supplications, avec des actions de grâces. » <cite>Philippiens 4 : 6</cite></blockquote>
+          </aside>
         </div>
       </section>
     </main>
 """)
-
-
-CORPS_CONFIDENTIALITE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Données personnelles</p>
-          <h1>Politique de confidentialité</h1>
-          <p class="lead">Dernière mise à jour : 31 octobre 2026.</p>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap wrap--narrow">
-          <h2>1. Responsable du traitement</h2>
-          <p>
-            <strong>$nom_maj</strong> — $adresse, $ville ($pays).
-            Contact : <a href="mailto:$email">$email</a>.
-          </p>
-
-          <h2>2. Ce que ce site collecte</h2>
-          <p>
-            Ce site est un site de présentation. Il ne crée aucun compte, ne dépose
-            aucun cookie de mesure d'audience et n'enregistre aucune donnée dans une
-            base de données.
-          </p>
-          <ul class="liste-propre">
-            <li>
-              <strong>Formulaires.</strong> Les informations saisies (nom, contact,
-              sujet, message) ne sont pas transmises à un serveur : elles servent à
-              composer un message dans votre propre logiciel de messagerie. Vous
-              décidez de l'envoyer.
-            </li>
-            <li>
-              <strong>Demandes de prière.</strong> Une fois reçues par courriel,
-              elles sont traitées de manière confidentielle, ne sont jamais publiées
-              et ne servent à aucune fin publicitaire.
-            </li>
-            <li>
-              <strong>Témoignages.</strong> Aucun témoignage n'est publié sans
-              autorisation explicite et sans validation préalable.
-            </li>
-            <li>
-              <strong>Polices de caractères.</strong> Le site charge des polices
-              depuis Google Fonts : votre adresse IP est alors transmise à ce
-              service. Un hébergement local des polices peut supprimer cet appel.
-            </li>
-            <li>
-              <strong>Vidéos.</strong> Les lecteurs YouTube ne sont chargés qu'après
-              un clic. Avant ce clic, aucune requête n'est faite vers YouTube.
-            </li>
-          </ul>
-
-          <h2>3. Durées de conservation</h2>
-          <p>
-            Les demandes de prière et les messages reçus par courriel sont conservés
-            le temps du suivi pastoral, puis supprimés sur demande. Les témoignages
-            refusés ne sont pas conservés.
-          </p>
-
-          <h2>4. Vos droits</h2>
-          <p>
-            Vous pouvez demander l'accès, la rectification ou la suppression des
-            informations vous concernant en écrivant à
-            <a href="mailto:$email">$email</a>. Une réponse est apportée dans les
-            meilleurs délais.
-          </p>
-
-          <h2>5. Sécurité</h2>
-          <p>
-            Les données sensibles (prière, situation personnelle) ne sont ni
-            publiées, ni partagées, ni utilisées à des fins commerciales. L'accès est
-            réservé aux personnes habilitées du Centre.
-          </p>
-
-          <h2>6. Hébergement</h2>
-          <p class="tiny muted">
-            L'hébergeur du site doit être renseigné ici (nom, adresse, contact) une
-            fois le déploiement effectué.
-          </p>
-        </div>
-      </section>
-    </main>
-""")
-
-
-CORPS_LEGAL = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Informations légales</p>
-          <h1>Mentions légales</h1>
-          <p class="lead">Dernière mise à jour : 31 octobre 2026.</p>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="wrap wrap--narrow">
-          <h2>Éditeur du site</h2>
-          <p>
-            <strong>$nom_maj</strong><br>
-            Adresse : $adresse<br>
-            $ville — $pays<br>
-            Téléphone : $telephone<br>
-            E-mail : <a href="mailto:$email">$email</a>
-          </p>
-          <p>Responsable de la publication : <strong>$pasteur</strong>, pasteur du Centre.</p>
-          <p class="tiny muted">
-            Les mentions d'identification légale (numéro d'enregistrement, statut
-            associatif ou cultuel) doivent être complétées par le Centre.
-          </p>
-
-          <h2>Données personnelles</h2>
-          <p>
-            Le traitement des données est décrit dans la
-            <a href="confidentialite.html">politique de confidentialité</a>.
-          </p>
-
-          <h2>Propriété intellectuelle</h2>
-          <p>
-            Les textes, visuels et éléments graphiques de ce site sont la propriété
-            du $nom, sauf mention contraire. Les vidéos restent la propriété de leurs
-            auteurs et sont diffusées depuis la chaîne officielle du ministère.
-          </p>
-
-          <h2>Hébergement</h2>
-          <p class="tiny muted">
-            L'hébergeur du site doit être renseigné ici (nom, adresse, contact) une
-            fois le déploiement effectué.
-          </p>
-
-          <h2>Litiges</h2>
-          <p>
-            Le présent site est soumis au droit ivoirien. En cas de difficulté, une
-            solution amiable sera recherchée avant toute action contentieuse.
-          </p>
-        </div>
-      </section>
-    </main>
-""")
-
-
-CORPS_404 = Template("""    <main id="contenu">
-      <section class="section" style="min-height:60vh;display:grid;align-items:center">
-        <div class="wrap wrap--narrow centre">
-          <p class="eyebrow" style="justify-content:center">Erreur 404</p>
-          <h1>Cette page n'existe pas.</h1>
-          <p class="lead" style="margin-inline:auto">
-            Le lien est peut-être ancien, ou l'adresse mal saisie. Revenez à
-            l'accueil, ou écrivez-nous si vous cherchiez quelque chose de précis.
-          </p>
-          <div class="hero__actions" style="justify-content:center">
-            <a class="btn btn--primary btn--lg" href="index.html">Retour à l'accueil</a>
-            <a class="btn btn--ghost btn--lg" href="nous-rejoindre.html">Nous écrire</a>
-          </div>
-        </div>
-      </section>
-    </main>
-""")
-
-
-CORPS_FICHE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">$genre · $date</p>
-          <h1>$titre</h1>
-          <ul class="meta-liste">
-            <li>Publié le <strong>$date</strong></li>
-            <li>Catégorie : <strong>$genre</strong></li>
-            <li>Par <strong>$intervenant</strong></li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="section section--serre">
-        <div class="wrap">
-          <div class="fiche-grille">
-            <div>
-              <div class="fiche-lecteur">
-                <button class="lecteur" type="button" data-video="$id" data-titre="$titre_attr"
-                        aria-label="Lire la vidéo : $titre_attr">
-                  <img class="vignette" src="$prefixe$vignette" alt="" width="1280" height="720">
-                  <span class="lecteur__voile" aria-hidden="true"></span>
-                  <span class="lecteur__badge" aria-hidden="true">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                  </span>
-                  <span class="lecteur__legende">Cliquer pour lire</span>
-                </button>
-              </div>
-
-              <h2 class="espace-haut">À propos de ce message</h2>
-              <p>
-                $resume
-              </p>
-              <div class="etat-vide" style="text-align:left">
-                <p class="tiny mb-0">
-                  Le résumé détaillé et les références bibliques de ce message seront
-                  rédigés par l'équipe du Centre. Ils ne sont pas générés
-                  automatiquement.
-                </p>
-              </div>
-
-              <h3 class="espace-haut">Partager</h3>
-              <ul class="partage">
-                <li><a href="https://www.facebook.com/sharer/sharer.php?u=$url_partage" target="_blank" rel="noopener">Facebook</a></li>
-                <li><a href="https://wa.me/?text=$texte_partage" target="_blank" rel="noopener">WhatsApp</a></li>
-                <li><button type="button" data-copier="$url_partage">Copier le lien</button></li>
-              </ul>
-            </div>
-
-            <aside>
-              <div class="carte">
-                <h3>Fiche</h3>
-                <p class="tiny muted mb-0">Titre : $titre</p>
-                <p class="tiny muted mb-0">Date : $date</p>
-                <p class="tiny muted mb-0">Catégorie : $genre</p>
-                <p class="tiny muted mb-0">Intervenant : $intervenant</p>
-                <p class="tiny muted mb-0">Source : chaîne officielle du ministère</p>
-              </div>
-              <div class="carte espace-haut">
-                <h3>Autres messages</h3>
-                <ul class="footer-liens" style="color:var(--ink-2)">
-$autres
-                </ul>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-    </main>
-""")
-
-
-CORPS_TEMOIGNAGES_PAGE = None  # marqueur de lecture : voir PAGES
-
-
-def corps_enseignements():
-    puces = "\n".join(
-        '            <button class="puce" type="button" data-filtre="%s" aria-pressed="false">%s</button>'
-        % (g, g)
-        for g in GENRES
-    )
-    return CORPS_ENSEIGNEMENTS.substitute(
-        fil=fil("Enseignements"),
-        puces=puces,
-        total=len(VIDEOS),
-        videos="\n".join(carte_video(v) for v in VIDEOS),
-        youtube=EGLISE["youtube"],
-        cta=CTA_FINAL,
-    )
-
-
-def corps_mediatheque():
-    puces = "\n".join(
-        '            <button class="puce" type="button" data-filtre="%s" aria-pressed="false">%s</button>'
-        % (g, g)
-        for g in GENRES
-    )
-    figures = []
-    for v in VIDEOS:
-        figures.append(
-            """            <figure data-genre="%s" data-titre="%s">
-              <button type="button" data-image="%s" data-legende="%s — %s">
-                <img src="%s" alt="%s" width="1280" height="800" loading="lazy">
-              </button>
-              <figcaption>%s — %s</figcaption>
-            </figure>"""
-            % (
-                v["genre"],
-                v["titre"].replace('"', "&quot;"),
-                vignette(v),
-                v["genre"],
-                v["date"],
-                vignette(v),
-                ("Vignette de la vidéo : " + v["titre"]).replace('"', "&quot;"),
-                v["genre"],
-                v["date"],
-            )
-        )
-    return CORPS_MEDIATHEQUE.substitute(
-        fil=fil("Médiathèque"),
-        puces=puces,
-        total=len(VIDEOS),
-        galerie="\n".join(figures),
-        cta=CTA_FINAL,
-    )
-
-
-# ── Instanciation des pages ───────────────────────────────────────────
-
-def _avec_bandeau(corps):
-    """Ajoute le bandeau d'inscription au jeûne en tête de page."""
-    return corps.replace('<main id="contenu">\n', '<main id="contenu">\n' + bandeau_jeune(), 1)
-
-
-def corps_accueil():
-    return _avec_bandeau(CORPS_ACCUEIL.substitute(
-        pays=EGLISE["pays"],
-        carte_culte=carte_culte(),
-        videos="\n".join(carte_video(v) for v in VIDEOS[:3]),
-        pasteur=PROPHETE["nom"],
-        role=PROPHETE["role"],
-        cta=CTA_FINAL,
-    ))
-
-
-def blocs_valeurs():
-    return "\n".join(
-        """            <article class="carte">
-              <p class="carte__numero">%02d</p>
-              <h3>%s</h3>
-              <p class="tiny muted">%s</p>
-              <p class="tiny" style="color:var(--gold-ink);font-weight:600;margin-bottom:0">%s</p>
-            </article>""" % (i + 1, nom, definition, reference)
-        for i, (nom, definition, reference) in enumerate(VALEURS)
-    )
-
-
-def blocs_departements():
-    out = []
-    for nom, responsable, mission in DEPARTEMENTS:
-        resp = (
-            "Responsable : <strong>%s</strong>" % responsable
-            if responsable
-            else 'Responsable : %s' % m(AC, "à confirmer")
-        )
-        out.append(
-            """            <article class="carte">
-              <h3 style="font-size:1.08rem">%s</h3>
-              <p class="tiny muted">%s</p>
-              <p class="tiny mb-0">%s</p>
-            </article>""" % (nom, mission, resp)
-        )
-    return "\n".join(out)
-
-
-def corps_centre():
-    return CORPS_CENTRE.substitute(
-        fil=fil("Le Centre"),
-        vision=VISION,
-        mission=MISSION,
-        valeurs=blocs_valeurs(),
-        departements=blocs_departements(),
-        adresse=EGLISE["adresse"],
-        quartier=EGLISE["quartier"],
-        pays=EGLISE["pays"],
-        pasteur=PROPHETE["nom"],
-        role=PROPHETE["role"],
-        nom_maj=EGLISE["nom_maj"],
-        annee=m(EGLISE["annee_fondation"], "année à confirmer"),
-        ville=m(EGLISE["ville"], "ville à confirmer"),
-        cta=CTA_FINAL,
-    )
-
-
-def corps_prophete():
-    return CORPS_PROPHETE.substitute(
-        fil=fil("Le Prophète"),
-        pasteur=PROPHETE["nom"],
-        nom_court=PROPHETE["nom_court"],
-        role=PROPHETE["role"],
-        youtube=EGLISE["youtube"],
-        videos="\n".join(carte_video(v) for v in VIDEOS[:3]),
-        cta=CTA_FINAL,
-    )
-
-
-def corps_programmes():
-    return _avec_bandeau(CORPS_PROGRAMMES.substitute(
-        fil=fil("Programmes"),
-        creneaux=lignes_creneaux(),
-        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
-        ville=m(EGLISE["ville"], "ville à confirmer"),
-        pays=EGLISE["pays"],
-        telephone=m(EGLISE["telephone"], "téléphone à confirmer"),
-        whatsapp=m(EGLISE["whatsapp"], "WhatsApp à confirmer"),
-        aConfirmer=m(AC, "à confirmer"),
-        cta=CTA_FINAL,
-    ))
-
-
-def corps_temoignages():
-    return CORPS_TEMOIGNAGES.substitute(
-        fil=fil("Témoignages"), email=EGLISE["email"], cta=CTA_FINAL
-    )
 
 
 def corps_priere():
-    return CORPS_PRIERE.substitute(fil=fil("Prière"), email=EGLISE["email"])
+    return CORPS_PRIERE.substitute(
+        entete=entete("Prière", "Déposez ce qui pèse sur votre cœur.",
+                      "Santé, famille, travail, mariage, finances : l'équipe pastorale prie pour votre intention.",
+                      "assets/img/culte/culte-scene.jpg"),
+        whatsapp=EGLISE["whatsapp"],
+        case=T_CASE.substitute(nom="consentement", texte="J'accepte que ma demande soit transmise à l'équipe pastorale du Centre."),
+    )
+
+
+CORPS_REJOINDRE = Template("""    <main id="contenu">
+$entete
+
+      <section class="section">
+        <div class="wrap colonnes">
+          <div>
+            <h2>L'adresse</h2>
+            <p class="grand">$adresse</p>
+            <p>$acces</p>
+            <div class="actions">
+              <a class="btn btn--feu" href="$maps" target="_blank" rel="noopener">Ouvrir l'itinéraire</a>
+              <a class="btn btn--contour-sombre" href="tel:+$whatsapp">Appeler le $telephone</a>
+            </div>
+          </div>
+          <div>
+            <h2>Les horaires</h2>
+            <div class="horaires">
+$horaires
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--sable">
+        <div class="wrap colonnes colonnes--form">
+          <div>
+            <h2>Nous écrire</h2>
+            <form class="formulaire" data-whatsapp="$whatsapp" data-sujet="Message depuis le site">
+              <div class="champ-duo">
+                <div class="champ">
+                  <label for="c-nom">Nom</label>
+                  <input id="c-nom" name="nom" type="text" autocomplete="name" required>
+                </div>
+                <div class="champ">
+                  <label for="c-tel">Téléphone</label>
+                  <input id="c-tel" name="telephone" type="tel" autocomplete="tel">
+                </div>
+              </div>
+              <div class="champ">
+                <label for="c-objet">Objet</label>
+                <select id="c-objet" name="objet">
+                  <option>Je souhaite venir au culte</option>
+                  <option>Question sur les programmes</option>
+                  <option>Accompagnement pastoral</option>
+                  <option>Faire un don</option>
+                  <option>Autre</option>
+                </select>
+              </div>
+              <div class="champ">
+                <label for="c-msg">Message</label>
+                <textarea id="c-msg" name="message" required></textarea>
+              </div>
+              <button class="btn btn--feu" type="submit">Envoyer le message</button>
+              <p class="avis" data-avis hidden role="status"></p>
+            </form>
+          </div>
+          <aside class="aparte">
+            <h3>Suivez le Centre</h3>
+            <ul class="liens-reseaux">
+              <li><a href="$youtube" target="_blank" rel="noopener">YouTube : les prédications</a></li>
+              <li><a href="$facebook" target="_blank" rel="noopener">Facebook : les annonces</a></li>
+              <li><a href="$tiktok" target="_blank" rel="noopener">TikTok : les extraits</a></li>
+            </ul>
+            <blockquote class="aparte__verset">« Car là où deux ou trois sont assemblés en mon nom, je suis au milieu d'eux. » <cite>Matthieu 18 : 20</cite></blockquote>
+          </aside>
+        </div>
+      </section>
+    </main>
+""")
 
 
 def corps_rejoindre():
     return CORPS_REJOINDRE.substitute(
-        fil=fil("Nous rejoindre"),
-        creneaux=lignes_creneaux(),
-        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
-        quartier=m(EGLISE["quartier"], "quartier à confirmer"),
-        ville=m(EGLISE["ville"], "ville à confirmer"),
-        pays=EGLISE["pays"],
-        telephone=m(EGLISE["telephone"], "téléphone à confirmer"),
-        whatsapp=m(EGLISE["whatsapp"], "WhatsApp à confirmer"),
-        email=EGLISE["email"],
-        facebook=m(EGLISE["facebook"], "page à confirmer"),
-        instagram=m(EGLISE["instagram"], "compte à confirmer"),
-        tiktok=m(EGLISE["tiktok"], "compte à confirmer"),
-        youtube=EGLISE["youtube"],
+        entete=entete("Nous rejoindre", "Venir au Centre.",
+                      "Adresse, horaires et contact : tout pour préparer votre première visite.",
+                      "assets/img/culte/culte-salle.jpg"),
+        adresse=EGLISE["adresse"], acces=EGLISE["acces"], maps=EGLISE["maps"],
+        whatsapp=EGLISE["whatsapp"], telephone=EGLISE["telephone"], horaires=lignes_horaires(),
+        youtube=EGLISE["youtube"], facebook=EGLISE["facebook"], tiktok=EGLISE["tiktok"],
     )
+
+
+CORPS_DONS = Template("""    <main id="contenu">
+$entete
+
+      <section class="section">
+        <div class="wrap colonnes">
+          <div>
+            <h2>Comment donner</h2>
+            <dl class="valeurs valeurs--une">
+              <div>
+                <dt>Pendant le culte</dt>
+                <dd>Offrandes et dîmes sont reçues à chaque culte, le dimanche et le mercredi.</dd>
+              </div>
+              <div>
+                <dt>Par Mobile Money</dt>
+                <dd>Écrivez au secrétariat : il vous communique le numéro du Centre et vous confirme la réception de votre don.</dd>
+              </div>
+              <div>
+                <dt>Pour un projet précis</dt>
+                <dd>Un don pour une action sociale ou un événement ? Précisez-le au secrétariat.</dd>
+              </div>
+            </dl>
+            $bouton
+          </div>
+          <div>
+            <h2>À quoi servent vos dons</h2>
+            <ul class="liste">
+              <li>Le fonctionnement des cultes et des activités de l'église.</li>
+              <li>L'accompagnement des personnes en difficulté.</li>
+              <li>Les actions sociales et les projets du Centre.</li>
+            </ul>
+            <blockquote class="aparte__verset">« Que chacun donne comme il l'a résolu en son cœur, sans tristesse ni contrainte ; car Dieu aime celui qui donne avec joie. » <cite>2 Corinthiens 9 : 7</cite></blockquote>
+          </div>
+        </div>
+      </section>
+    </main>
+""")
 
 
 def corps_dons():
     return CORPS_DONS.substitute(
-        fil=fil("Faire un don"),
-        mobilemoney=m(AC, "à confirmer"),
-        iban=m(AC, "à confirmer"),
+        entete=entete("Faire un don", "Donner, c'est participer à l'œuvre.",
+                      "Vos dons soutiennent les cultes, l'accompagnement des personnes et les actions du Centre.",
+                      "assets/img/culte/culte-large.jpg"),
+        bouton=bouton_whatsapp("Bonjour, je souhaite faire un don au Centre des Amoureux de Dieu.",
+                               "Écrire au secrétariat"),
     )
 
-
-def corps_confidentialite():
-    return CORPS_CONFIDENTIALITE.substitute(
-        fil=fil("Confidentialité"),
-        nom_maj=EGLISE["nom_maj"],
-        nom=EGLISE["nom"],
-        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
-        ville=m(EGLISE["ville"], "ville à confirmer"),
-        pays=EGLISE["pays"],
-        email=EGLISE["email"],
-    )
-
-
-def corps_legal():
-    return CORPS_LEGAL.substitute(
-        fil=fil("Mentions légales"),
-        nom=EGLISE["nom"],
-        nom_maj=EGLISE["nom_maj"],
-        adresse=m(EGLISE["adresse"], "adresse à confirmer"),
-        ville=m(EGLISE["ville"], "ville à confirmer"),
-        pays=EGLISE["pays"],
-        telephone=m(EGLISE["telephone"], "téléphone à confirmer"),
-        email=EGLISE["email"],
-        pasteur=PROPHETE["nom"],
-    )
-
-
-
-# ── Jeûne de novembre 2026 : page d'inscription ─────────────────────
-JEUNE = {
-    "titre": "14 jours de jeûnes et prières",
-    "theme": "Expérimenter la gloire de Dieu",
-    "dates": "Du lundi 9 au dimanche 22 novembre 2026",
-    "affiche": "assets/img/affiches/jeune-14-jours-2026.jpg",
-    "groupe_whatsapp": "https://chat.whatsapp.com/Hloy0fmD8zvFcszL4Epzfv",
-    "programme": "jeune-14-jours-nov-2026",
-}
-
-BANDEAU_JEUNE = Template("""      <section class="bandeau-jeune">
-        <div class="wrap bandeau-jeune__in">
-          <p><strong>$titre</strong> · $dates · Thème : « $theme »</p>
-          <a class="btn btn--primary" href="${prefixe}jeune.html">Je m'inscris</a>
-        </div>
-      </section>
-""")
 
 CORPS_JEUNE = Template("""    <main id="contenu">
-      <section class="entete-page">
-        <div class="wrap wrap--narrow">
-$fil
-          <p class="eyebrow">Jeûne et prière · novembre 2026</p>
-          <h1>$titre</h1>
-          <p class="lead">
-            Thème : <strong>« $theme »</strong>. $dates.
-            Inscrivez-vous : la validation vous fait entrer directement dans le groupe WhatsApp du jeûne.
-          </p>
-        </div>
-      </section>
+$entete
 
       <section class="section">
-        <div class="wrap">
-          <div class="grille grille--2 jeune-grille">
-            <div>
-              <h2>Je participe au jeûne</h2>
-              <form class="formulaire" id="form-jeune" data-programme="$programme" data-whatsapp="$whatsapp_num" novalidate>
-                <div class="champ--duo">
-                  <div class="champ">
-                    <label for="j-nom">Nom</label>
-                    <input id="j-nom" name="nom" type="text" autocomplete="family-name" maxlength="80" required>
-                  </div>
-                  <div class="champ">
-                    <label for="j-prenom">Prénom</label>
-                    <input id="j-prenom" name="prenom" type="text" autocomplete="given-name" maxlength="80" required>
-                  </div>
+        <div class="wrap colonnes colonnes--form">
+          <div>
+            <h2>Je participe au jeûne</h2>
+            <form class="formulaire" id="form-jeune" data-programme="jeune-14-jours-nov-2026" novalidate>
+              <div class="champ-duo">
+                <div class="champ">
+                  <label for="j-nom">Nom</label>
+                  <input id="j-nom" name="nom" type="text" autocomplete="family-name" maxlength="80" required>
                 </div>
                 <div class="champ">
-                  <label for="j-quartier">Quartier</label>
-                  <input id="j-quartier" name="quartier" type="text" placeholder="Ex. Riviera 2, Yopougon, Abobo…" maxlength="80" required>
+                  <label for="j-prenom">Prénom</label>
+                  <input id="j-prenom" name="prenom" type="text" autocomplete="given-name" maxlength="80" required>
                 </div>
-                <div class="champ">
-                  <label for="j-telephone">Numéro de téléphone (WhatsApp)</label>
-                  <input id="j-telephone" name="telephone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07 00 00 00 00" maxlength="20" pattern="[+0-9 .()-]{8,20}" required>
-                </div>
-                <div class="champ">
-                  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
-                    <input type="checkbox" name="consentement" required style="width:18px;height:18px;margin-top:4px;flex:0 0 auto">
-                    <span class="tiny">J'accepte que ces informations soient utilisées par le Centre uniquement pour l'organisation du jeûne.</span>
-                  </label>
-                </div>
-                <button class="btn btn--primary btn--lg" type="submit">Valider et rejoindre le groupe WhatsApp</button>
-                <p class="note-formulaire" data-avis hidden role="status"></p>
-              </form>
-
-              <div class="encart encart--or jeune-groupe" id="jeune-groupe" hidden>
-                <h3>WhatsApp ne s'est pas ouvert ?</h3>
-                <p>Touchez le bouton ci-dessous pour entrer dans le groupe du jeûne.</p>
-                <a class="btn btn--primary btn--lg" id="lien-groupe" href="$groupe" rel="noopener">Rejoindre le groupe WhatsApp</a>
               </div>
-            </div>
-
-            <div>
-              <img class="jeune-affiche" src="$affiche" alt="Affiche : 14 jours de jeûnes et prières, du 9 au 22 novembre 2026, thème Expérimenter la gloire de Dieu, Prophète Daniel Jeff Adou" width="900" height="1114" loading="lazy">
-              <div class="carte" style="margin-top:20px">
-                <h3>Le programme</h3>
-                <ul class="liste-propre mb-0">
-                  <li><strong>Chaque matin, 5h00 – 5h30</strong> : WhatsApp, groupe « CAD Prière matinale »</li>
-                  <li><strong>Chaque soir, à partir de 20h45</strong> : Google Meet</li>
-                  <li><strong>Mercredis 11 et 18 novembre</strong> : à l'église</li>
-                  <li><strong>Vendredi 20 novembre, dès 21h00</strong> : Grande nuit de prophéties et de délivrances, à l'église</li>
-                </ul>
-                <p class="tiny mt-0" style="margin-top:12px">Renseignements : $telephone</p>
+              <div class="champ">
+                <label for="j-quartier">Quartier</label>
+                <input id="j-quartier" name="quartier" type="text" placeholder="Ex. Riviera 2, Yopougon, Abobo" maxlength="80" required>
               </div>
+              <div class="champ">
+                <label for="j-telephone">Numéro de téléphone (WhatsApp)</label>
+                <input id="j-telephone" name="telephone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07 00 00 00 00" maxlength="20" pattern="[+0-9 .()-]{8,20}" required>
+              </div>
+$case
+              <button class="btn btn--feu" type="submit">Valider et rejoindre le groupe WhatsApp</button>
+              <p class="avis" data-avis hidden role="status"></p>
+            </form>
+            <div class="aparte aparte--alerte" id="jeune-groupe" hidden>
+              <h3>WhatsApp ne s'est pas ouvert ?</h3>
+              <p>Touchez le bouton pour entrer dans le groupe du jeûne.</p>
+              <a class="btn btn--feu" id="lien-groupe" href="$groupe" rel="noopener">Rejoindre le groupe WhatsApp</a>
             </div>
           </div>
+          <aside>
+            <img class="affiche-seule" src="assets/img/affiches/jeune-14-jours-2026.jpg" alt="Affiche : 14 jours de jeûnes et prières, du 9 au 22 novembre 2026" width="900" height="1114">
+            <div class="horaires horaires--compact">
+              <div class="horaire"><span class="horaire__jour">Chaque matin</span><span class="horaire__nom">WhatsApp, groupe CAD Prière matinale</span><span class="horaire__heure">5h00 – 5h30</span></div>
+              <div class="horaire"><span class="horaire__jour">Chaque soir</span><span class="horaire__nom">Google Meet</span><span class="horaire__heure">dès 20h45</span></div>
+              <div class="horaire"><span class="horaire__jour">11 et 18 nov.</span><span class="horaire__nom">À l'église</span><span class="horaire__heure">mercredi</span></div>
+              <div class="horaire"><span class="horaire__jour">20 nov.</span><span class="horaire__nom">Grande nuit de prophéties et de délivrances</span><span class="horaire__heure">dès 21h00</span></div>
+            </div>
+          </aside>
         </div>
       </section>
     </main>
     <script src="assets/js/jeune.js" defer></script>
 """)
 
-
-def bandeau_jeune(prefixe=""):
-    return BANDEAU_JEUNE.substitute(prefixe=prefixe, **{k: JEUNE[k] for k in ("titre", "dates", "theme")})
+GROUPE_JEUNE = "https://chat.whatsapp.com/Hloy0fmD8zvFcszL4Epzfv"
 
 
 def corps_jeune():
     return CORPS_JEUNE.substitute(
-        fil=fil("Jeûne de novembre"),
-        titre=JEUNE["titre"],
-        theme=JEUNE["theme"],
-        dates=JEUNE["dates"],
-        affiche=JEUNE["affiche"],
-        groupe=JEUNE["groupe_whatsapp"],
-        programme=JEUNE["programme"],
-        whatsapp_num=re.sub(r"\D", "", EGLISE["whatsapp"]),
-        telephone=EGLISE["telephone"],
+        entete=entete("Jeûne de novembre", "14 jours de jeûnes et prières",
+                      "Thème : « Expérimenter la gloire de Dieu ». Du lundi 9 au dimanche 22 novembre 2026.",
+                      "assets/img/culte/culte-scene.jpg"),
+        groupe=GROUPE_JEUNE,
+        case=T_CASE.substitute(nom="consentement", texte="J'accepte que ces informations servent au Centre pour l'organisation du jeûne."),
     )
 
 
-def pages_simples():
-    return [
-        ("index.html", "Accueil",
-         "Centre des Amoureux de Dieu — une église où la Parole est enseignée avec clarté, où la prière est une respiration et où chacun est accueilli. Cultes, prédications, prière.",
-         corps_accueil(), True, None),
-        ("le-centre.html", "À propos",
-         "Qui nous sommes : vision, valeurs et conduite du Centre des Amoureux de Dieu.",
-         corps_centre(), True, None),
-        ("le-prophete.html", "Le Prophète",
-         "Présentation du Prophète Daniel Jeff Adou, pasteur du Centre des Amoureux de Dieu, et de son ministère.",
-         corps_prophete(), True, None),
-        ("programmes.html", "Nos programmes",
-         "Horaires des cultes, programmes spéciaux, événements et informations pour une première visite.",
-         corps_programmes(), True, None),
-        ("enseignements.html", "Prédications",
-         "Bibliothèque des prédications et enseignements du Centre des Amoureux de Dieu, avec recherche et filtres.",
-         corps_enseignements(), True, None),
-        ("mediatheque.html", "Médiathèque",
-         "Galerie des visuels du ministère : cultes, enseignements, prière, événements.",
-         corps_mediatheque(), True, None),
-        ("temoignages.html", "Témoignages",
-         "Partager un témoignage, et consulter les témoignages validés par l'équipe du Centre.",
-         corps_temoignages(), True, None),
-        ("priere.html", "Prière",
-         "Envoyer une demande de prière à l'équipe pastorale, en toute confidentialité.",
-         corps_priere(), True, None),
-        ("jeune.html", "Jeûne de novembre",
-         "Inscription aux 14 jours de jeûnes et prières du Centre des Amoureux de Dieu (9 au 22 novembre 2026) : Expérimenter la gloire de Dieu.",
-         corps_jeune(), True, None),
-        ("nous-rejoindre.html", "Nous rejoindre",
-         "Venir au Centre des Amoureux de Dieu : adresse, horaires, contacts, visite et formulaire de contact.",
-         corps_rejoindre(), True, None),
-        ("dons.html", "Faire un don",
-         "Soutenir les cultes, l'accompagnement et les actions sociales du Centre des Amoureux de Dieu.",
-         corps_dons(), False, None),
-        ("mentions-legales.html", "Mentions légales",
-         "Mentions légales, propriété intellectuelle et hébergement du site du Centre des Amoureux de Dieu.",
-         corps_legal(), False, None),
-        ("confidentialite.html", "Confidentialité",
-         "Politique de confidentialité : quelles données, pour quoi, combien de temps, et vos droits.",
-         corps_confidentialite(), False, None),
-        ("404.html", "Page introuvable",
-         "La page demandée n'existe pas.",
-         CORPS_404.substitute(), False, None),
-    ]
+CORPS_CONFIDENTIALITE = Template("""    <main id="contenu">
+$entete
+
+      <section class="section">
+        <div class="wrap texte-long">
+          <h2>Responsable</h2>
+          <p>Centre des Amoureux de Dieu, $adresse, $ville ($pays). Téléphone : $telephone.</p>
+
+          <h2>Ce que le site recueille</h2>
+          <p>Le site ne crée aucun compte et ne dépose aucun cookie de mesure d'audience.</p>
+          <ul class="liste">
+            <li><strong>Formulaires de prière, de témoignage et de contact.</strong> Les informations saisies
+            composent un message WhatsApp adressé au Centre ; vous choisissez de l'envoyer.</li>
+            <li><strong>Inscription au jeûne.</strong> Nom, prénom, quartier et numéro servent uniquement à
+            l'organisation du jeûne.</li>
+            <li><strong>Demandes de prière.</strong> Elles sont traitées de manière confidentielle et ne sont
+            jamais publiées.</li>
+            <li><strong>Témoignages.</strong> Aucun témoignage n'est publié sans votre autorisation.</li>
+            <li><strong>Vidéos.</strong> Le lecteur YouTube ne se charge qu'après un clic sur la vidéo.</li>
+          </ul>
+
+          <h2>Durée de conservation</h2>
+          <p>Les messages reçus sont conservés le temps du suivi pastoral, puis supprimés à votre demande.</p>
+
+          <h2>Vos droits</h2>
+          <p>Vous pouvez demander l'accès, la correction ou la suppression des informations qui vous
+          concernent en écrivant au Centre au $telephone.</p>
+        </div>
+      </section>
+    </main>
+""")
+
+CORPS_LEGAL = Template("""    <main id="contenu">
+$entete
+
+      <section class="section">
+        <div class="wrap texte-long">
+          <h2>Éditeur</h2>
+          <p>Centre des Amoureux de Dieu<br>$adresse<br>$ville, $pays<br>Téléphone : $telephone</p>
+          <p>Responsable de la publication : Prophète Daniel Jeff Adou.</p>
+
+          <h2>Propriété intellectuelle</h2>
+          <p>Les textes, photographies et visuels de ce site appartiennent au Centre des Amoureux de
+          Dieu, sauf mention contraire. Les vidéos sont diffusées depuis la chaîne officielle du ministère.</p>
+
+          <h2>Données personnelles</h2>
+          <p>Leur traitement est décrit dans la <a href="confidentialite.html">politique de confidentialité</a>.</p>
+
+          <h2>Droit applicable</h2>
+          <p>Ce site est soumis au droit ivoirien.</p>
+        </div>
+      </section>
+    </main>
+""")
+
+CORPS_404 = Template("""    <main id="contenu">
+      <section class="entete entete--seul" style="background-image:url('assets/img/culte/culte-salle.jpg')">
+        <div class="wrap">
+          <h1>Cette page n'existe pas.</h1>
+          <p class="entete__intro">Le lien est peut-être ancien ou mal saisi.</p>
+          <div class="actions">
+            <a class="btn btn--feu" href="index.html">Retour à l'accueil</a>
+            <a class="btn btn--contour" href="enseignements.html">Voir les prédications</a>
+          </div>
+        </div>
+      </section>
+    </main>
+""")
+
+
+def corps_simple(modele, libelle, titre, intro):
+    return modele.substitute(
+        entete=entete(libelle, titre, intro, "assets/img/culte/culte-salle.jpg", classe="entete--court"),
+        adresse=EGLISE["adresse"], ville=EGLISE["ville"], pays=EGLISE["pays"], telephone=EGLISE["telephone"],
+    )
+
+
+CORPS_FICHE = Template("""    <main id="contenu">
+      <section class="fiche">
+        <div class="wrap">
+          <nav class="fil" aria-label="Fil d'Ariane"><a href="../index.html">Accueil</a> <span aria-hidden="true">/</span> <a href="../enseignements.html">Prédications</a></nav>
+          <div class="fiche__lecteur">
+            <button class="lecteur lecteur--grand" type="button" data-video="$id" data-titre="$titre_attr" aria-label="Lire la vidéo : $titre_attr">
+              <img src="../$vignette" alt="" width="1280" height="720">
+              <span class="lecteur__bouton" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+            </button>
+          </div>
+          <div class="fiche__texte">
+            <p class="video__meta">$genre, $date</p>
+            <h1>$titre</h1>
+            <p>Message du Prophète Daniel Jeff Adou, publié le $date sur la chaîne officielle du Centre des Amoureux de Dieu.</p>
+            <div class="partage">
+              <a class="btn btn--feu" href="https://wa.me/?text=$texte_partage" target="_blank" rel="noopener">Partager sur WhatsApp</a>
+              <a class="btn btn--contour" href="https://www.facebook.com/sharer/sharer.php?u=$url" target="_blank" rel="noopener">Facebook</a>
+              <button class="btn btn--contour" type="button" data-copier="$url">Copier le lien</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="tete tete--ligne">
+            <h2>Autres messages</h2>
+            <a class="lien" href="../enseignements.html">Toutes les prédications</a>
+          </div>
+          <div class="grille-videos">
+$autres
+          </div>
+        </div>
+      </section>
+    </main>
+""")
 
 
 def fiche(v):
-    """Fiche individuelle d'une prédication (URL partageable, données structurées)."""
-    autres = [
-        '<li><a href="%s.html">%s</a></li>' % (a["slug"], a["titre"])
-        for a in VIDEOS
-        if a["id"] != v["id"]
-    ][:4]
+    from urllib.parse import quote
     url = "%s/predications/%s.html" % (EGLISE["site"], v["slug"])
+    autres = [a for a in VIDEOS if a["id"] != v["id"]][:3]
     corps = CORPS_FICHE.substitute(
-        fil=fil(v["genre"], prefixe="../"),
-        titre=v["titre"],
-        titre_attr=v["titre"].replace('"', "&quot;"),
-        genre=v["genre"],
-        date=v["date"],
-        id=v["id"],
-        intervenant=PROPHETE["nom"],
-        prefixe="../",
-        vignette=vignette(v),
-        resume=(
-            "Message publié le %s sur la chaîne officielle du ministère. "
-            "Cette fiche rassemble la vidéo, la date de publication et les "
-            "informations de référence." % v["date"]
-        ),
-        url_partage=url,
-        texte_partage=(v["titre"] + " — " + EGLISE["nom"]).replace(" ", "%20"),
-        autres="\n".join(autres),
+        titre=v["titre"], titre_attr=attr(v["titre"]), genre=v["genre"], date=v["date"],
+        id=v["id"], vignette=vignette(v), url=url,
+        texte_partage=quote("%s, Prophète Daniel Jeff Adou : %s" % (v["titre"], url)),
+        autres="\n".join(carte_video(a, prefixe="../") for a in autres),
     )
     jsonld = {
-        "@context": "https://schema.org",
-        "@type": "VideoObject",
-        "name": v["titre"],
-        "description": "Message du %s — %s." % (v["date"], PROPHETE["nom"]),
-        "uploadDate": v["iso"],
-        "url": url,
+        "@context": "https://schema.org", "@type": "VideoObject", "name": v["titre"],
+        "description": "Message du %s, %s." % (v["date"], PROPHETE["nom"]),
+        "uploadDate": v["iso"], "url": url,
         "thumbnailUrl": "%s/%s" % (EGLISE["site"], vignette(v)),
         "embedUrl": "https://www.youtube-nocookie.com/embed/%s" % v["id"],
         "publisher": {"@type": "Organization", "name": EGLISE["nom"]},
     }
-    nom_complet = "%s · %s" % (v["titre"], EGLISE["nom"])
-    return page_html(
-        "predications/%s.html" % v["slug"],
-        v["titre"],
-        "%s — message du %s publié par %s." % (v["titre"], v["date"], PROPHETE["nom"]),
-        corps,
-        index=True,
-        jsonld=jsonld,
-        prefixe="../",
-    )
+    return page_html("predications/%s.html" % v["slug"], v["titre"],
+                     "%s : message du %s, %s." % (v["titre"], v["date"], PROPHETE["nom"]),
+                     corps, index=True, jsonld=jsonld, prefixe="../")
+
+
+# ── Liste des pages ───────────────────────────────────────────────────
+
+def pages_simples():
+    return [
+        ("index.html", "Accueil",
+         "Centre des Amoureux de Dieu, église à Cocody Riviera 2 (Abidjan) : cultes le dimanche, prédications du Prophète Daniel Jeff Adou, prière et événements.",
+         corps_accueil(), True, None, "page-accueil"),
+        ("le-centre.html", "Le Centre",
+         "Vision, mission et valeurs du Centre des Amoureux de Dieu, église fondée en octobre 2023 à Abidjan.",
+         corps_centre(), True, None, ""),
+        ("le-prophete.html", "Le Prophète",
+         "Le Prophète Daniel Jeff Adou, fondateur et pasteur du Centre des Amoureux de Dieu, auteur de « Sortir des prisons familiales ».",
+         corps_prophete(), True, None, ""),
+        ("programmes.html", "Programmes",
+         "Horaires des cultes, déroulement, jeûnes, nuits de prière et événements du Centre des Amoureux de Dieu.",
+         corps_programmes(), True, None, ""),
+        ("enseignements.html", "Prédications",
+         "Les prédications du Prophète Daniel Jeff Adou, avec recherche et filtres.",
+         corps_enseignements(), True, None, ""),
+        ("mediatheque.html", "Médiathèque",
+         "Photos des cultes, affiches et vidéos du Centre des Amoureux de Dieu.",
+         corps_mediatheque(), True, None, ""),
+        ("temoignages.html", "Témoignages",
+         "Partager un témoignage avec le Centre des Amoureux de Dieu.",
+         corps_temoignages(), True, None, ""),
+        ("priere.html", "Prière",
+         "Envoyer une demande de prière à l'équipe pastorale du Centre des Amoureux de Dieu, en toute confidentialité.",
+         corps_priere(), True, None, ""),
+        ("jeune.html", "Jeûne de novembre",
+         "Inscription aux 14 jours de jeûnes et prières du Centre des Amoureux de Dieu (9 au 22 novembre 2026) : Expérimenter la gloire de Dieu.",
+         corps_jeune(), True, None, ""),
+        ("nous-rejoindre.html", "Nous rejoindre",
+         "Adresse, itinéraire, horaires et contact du Centre des Amoureux de Dieu à Cocody Riviera 2, Abidjan.",
+         corps_rejoindre(), True, None, ""),
+        ("dons.html", "Faire un don",
+         "Soutenir les cultes, l'accompagnement et les actions du Centre des Amoureux de Dieu.",
+         corps_dons(), True, None, ""),
+        ("mentions-legales.html", "Mentions légales",
+         "Mentions légales du site du Centre des Amoureux de Dieu.",
+         corps_simple(CORPS_LEGAL, "Mentions légales", "Mentions légales", "Éditeur, propriété intellectuelle et droit applicable."),
+         False, None, ""),
+        ("confidentialite.html", "Confidentialité",
+         "Politique de confidentialité du site du Centre des Amoureux de Dieu.",
+         corps_simple(CORPS_CONFIDENTIALITE, "Confidentialité", "Vos données", "Ce que le site recueille, pourquoi, et vos droits."),
+         False, None, ""),
+        ("404.html", "Page introuvable", "La page demandée n'existe pas.",
+         CORPS_404.substitute(), False, None, ""),
+    ]
 
 
 # ══════════════════════════════════════════════════════════════════════
 # 4. ÉCRITURE
 # ══════════════════════════════════════════════════════════════════════
 
-OBSOLETES = ["cultes.html", "evenements.html", "contact.html"]
+OBSOLETES = ["cultes.html", "evenements.html", "contact.html",
+             "predications/service-prohetique-ancien.html"]
 
 
 def ecrire():
     ecrits = []
-    for page in pages_simples():
-        fichier, titre, description, corps, index, jsonld = page
-        html = page_html(fichier, titre, description, corps, index=index, jsonld=jsonld)
+    for fichier, titre, description, corps, index, jsonld, classe in pages_simples():
+        html = page_html(fichier, titre, description, corps, index=index, jsonld=jsonld, classe_corps=classe)
         with open(os.path.join(RACINE, fichier), "w", encoding="utf-8") as fh:
             fh.write(html)
         ecrits.append((fichier, len(html)))
@@ -2279,8 +1416,7 @@ def ecrire():
     os.makedirs(dossier, exist_ok=True)
     for v in VIDEOS:
         html = fiche(v)
-        chemin = os.path.join(dossier, "%s.html" % v["slug"])
-        with open(chemin, "w", encoding="utf-8") as fh:
+        with open(os.path.join(dossier, "%s.html" % v["slug"]), "w", encoding="utf-8") as fh:
             fh.write(html)
         ecrits.append(("predications/%s.html" % v["slug"], len(html)))
 
@@ -2293,102 +1429,46 @@ def ecrire():
 
 def sitemap():
     entrees = []
-    for fichier, _, _, _, index, _ in pages_simples():
+    for fichier, _, _, _, index, _, _ in pages_simples():
         if not index:
             continue
         entrees.append(
-            "  <url>\n    <loc>%s/%s</loc>\n    <changefreq>monthly</changefreq>\n    <priority>%s</priority>\n  </url>"
+            "  <url>\n    <loc>%s/%s</loc>\n    <changefreq>weekly</changefreq>\n    <priority>%s</priority>\n  </url>"
             % (EGLISE["site"], "" if fichier == "index.html" else fichier,
-               "1.0" if fichier == "index.html" else "0.7")
-        )
+               "1.0" if fichier == "index.html" else "0.7"))
     for v in VIDEOS:
         entrees.append(
             "  <url>\n    <loc>%s/predications/%s.html</loc>\n    <lastmod>%s</lastmod>\n    <priority>0.6</priority>\n  </url>"
-            % (EGLISE["site"], v["slug"], v["iso"])
-        )
-    return (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + "\n".join(entrees)
-        + "\n</urlset>\n"
-    )
+            % (EGLISE["site"], v["slug"], v["iso"]))
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + "\n".join(entrees) + "\n</urlset>\n")
 
 
-MOTIF_MARQUEUR = re.compile(r'<span class="a-completer"[^>]*>(.*?)</span>', re.S)
+A_FOURNIR = """# Contenus à fournir par le Centre
 
+Le site ne montre plus de cases « à confirmer » : ce qui manque est simplement
+absent. Voici ce qui l'enrichirait.
 
-def contenu_a_completer():
-    """Document PRODUIT en relisant les pages écrites : il ne peut pas mentir."""
-    total = 0
-    blocs = []
-    fichiers = []
-    for nom in sorted(os.listdir(RACINE)):
-        if nom.endswith(".html"):
-            fichiers.append(nom)
-    dossier = os.path.join(RACINE, "predications")
-    if os.path.isdir(dossier):
-        fichiers += ["predications/" + f for f in sorted(os.listdir(dossier)) if f.endswith(".html")]
+- **Photos HD** des cultes, de la louange et des événements (les photos actuelles
+  sont tirées des vidéos de culte, en 720p).
+- **Biographie du Prophète** : parcours, appel, dates clés.
+- **Histoire du Centre** : étapes marquantes depuis octobre 2023.
+- **Numéro Mobile Money** du Centre, si vous voulez l'afficher sur la page Dons.
+- **Instagram**, si le Centre a un compte.
+- **Couverture HD du livre** « Sortir des prisons familiales »
+  (`assets/img/livre-sortir-des-prisons.jpg`, actuellement générée depuis le PDF).
 
-    for fichier in fichiers:
-        with open(os.path.join(RACINE, fichier), encoding="utf-8") as fh:
-            html = fh.read()
-        trouves = MOTIF_MARQUEUR.findall(html)
-        if not trouves:
-            continue
-        total += len(trouves)
-        blocs.append("### `%s`\n\n%s\n" % (fichier, "\n".join("- %s" % t.strip() for t in trouves)))
-
-    doc = """# Contenu à fournir par le Centre des Amoureux de Dieu
-
-Fichier **généré** par `outils/generer.py` en relisant les pages réellement
-produites. Il liste chaque information encore marquée « à confirmer » (fond
-doré pointillé sur le site).
-
-Total : **%d marqueurs** sur le site.
-
-## 1. Identité et contacts
-
-| Champ | À fournir |
-|---|---|
-| Ville / quartier / adresse complète | adresse officielle + point de repère |
-| Téléphone / WhatsApp | numéros du secrétariat |
-| E-mail | adresse réelle (actuellement `contact@centre-des-amoureux.org`, provisoire) |
-| Année de fondation, histoire du Centre | texte validé par la direction |
-| Responsables (pasteurs, anciens, départements) | liste et rôles |
-| Logo, photos officielles, portrait du Prophète | fichiers haute définition |
-| Facebook / Instagram / TikTok | URL des pages officielles |
-| Domaine, hébergeur, identification légale | informations administratives |
-| Mobile Money / coordonnées bancaires | compte marchand agréé |
-
-## 2. Horaires
-
-| Rendez-vous | Horaire |
-|---|---|
-| Culte d'adoration (dimanche) | à confirmer |
-| Culte de la Parole (mercredi) | à confirmer |
-| Nuit de prière (vendredi) | à confirmer |
-
-## 3. Où chaque marqueur apparaît
-
-%s
-## 4. Après réception
-
-1. Renseigner `EGLISE` et `CRENEAUX` dans `outils/generer.py`.
-2. Lancer `python3 outils/generer.py`.
-3. Quand plus aucun marqueur ne subsiste, retirer `data-etat="travail"` de la
-   balise `<html>` dans le gabarit `T_PAGE` pour masquer le bandeau de travail.
-""" % (total, "\n".join(blocs))
-    return total, doc
+Pour modifier le site : éditer `outils/generer.py` puis lancer
+`python3 outils/generer.py`.
+"""
 
 
 if __name__ == "__main__":
     resultat = ecrire()
     with open(os.path.join(RACINE, "sitemap.xml"), "w", encoding="utf-8") as fh:
         fh.write(sitemap())
-    nb, doc = contenu_a_completer()
     with open(os.path.join(RACINE, "CONTENU-A-COMPLETER.md"), "w", encoding="utf-8") as fh:
-        fh.write(doc)
-    print("marqueurs « à confirmer » : %d" % nb)
+        fh.write(A_FOURNIR)
     for nom, taille in resultat:
-        print("%-46s %7d octets" % (nom, taille))
-    print("%-46s %7d octets" % ("sitemap.xml", os.path.getsize(os.path.join(RACINE, "sitemap.xml"))))
+        print("%-52s %7d octets" % (nom, taille))

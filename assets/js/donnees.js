@@ -41,45 +41,32 @@
       var elements = d.elements || [];
       if (!elements.length) return;
       zoneAgenda.innerHTML = elements.map(function (a) {
-        var img = a.image
-          ? '<img src="' + echapper(a.image) + '" alt="" width="120" height="150" loading="lazy" ' +
-            'style="width:88px;height:110px;object-fit:cover;border-radius:8px;flex:0 0 auto">'
-          : "";
         return '<div class="agenda__item">' +
           '<span class="agenda__quand">' + echapper(dateLisible(a.date_iso)) +
-          (a.heure ? "<br><span class=\"tiny muted\">" + echapper(a.heure) + "</span>" : "") + "</span>" +
-          "<div>" +
-            '<span class="tag" style="display:inline-block;font-size:.7rem;letter-spacing:.06em;' +
-            'text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(237,108,16,.12);' +
-            'color:#a64c0b;font-weight:700">' + echapper(a.categorie) + "</span>" +
-            '<div style="font-weight:600;margin-top:6px">' + echapper(a.titre) + "</div>" +
-            (a.description ? '<p class="tiny muted mb-0">' + echapper(a.description) + "</p>" : "") +
-            (a.lieu ? '<p class="tiny muted mb-0">' + echapper(a.lieu) + "</p>" : "") +
-          "</div>" + img + "</div>";
+          (a.heure ? "<br>" + echapper(a.heure) : "") + "</span>" +
+          "<div><strong>" + echapper(a.titre) + "</strong>" +
+          (a.description ? "<br>" + echapper(a.description) : "") +
+          (a.lieu ? "<br><em>" + echapper(a.lieu) + "</em>" : "") + "</div>" +
+          (a.image ? '<img src="' + echapper(a.image) + '" alt="" width="88" height="110" loading="lazy" style="width:88px;height:110px;object-fit:cover;border-radius:4px">' : "<span></span>") +
+          "</div>";
       }).join("");
       zoneAgenda.hidden = false;
-      var vide = document.querySelector("[data-agenda-vide]");
-      if (vide) vide.hidden = true;
     });
   }
 
-  /* ── Médiathèque : affiches ──────────────────────────────────── */
+  /* ── Médiathèque : affiches publiées depuis l'administration ─── */
   var zoneAffiches = document.querySelector("[data-affiches]");
   if (zoneAffiches) {
     charger("assets/data/affiches.json").then(function (d) {
       var elements = d.elements || [];
       if (!elements.length) return;
       zoneAffiches.innerHTML = elements.map(function (a) {
-        var legende = a.categorie + " — " + dateLisible(a.date_iso);
-        return '<figure data-genre="Affiche" data-titre="' + echapper(a.titre) + '">' +
-          '<button type="button" data-image="' + echapper(a.image) + '" data-legende="' +
-          echapper(a.titre + " — " + legende) + '">' +
+        var legende = a.titre + ", " + dateLisible(a.date_iso);
+        return '<button type="button" data-image="' + echapper(a.image) + '" data-legende="' + echapper(legende) + '">' +
           '<img src="' + echapper(a.image) + '" alt="' + echapper("Affiche : " + a.titre) +
-          '" width="800" height="1000" loading="lazy"></button>' +
-          '<figcaption>' + echapper(a.titre) + " — " + echapper(legende) + "</figcaption></figure>";
+          '" width="800" height="1000" loading="lazy"></button>';
       }).join("");
       zoneAffiches.hidden = false;
-      lierVisionneuse();
     });
   }
 
@@ -91,33 +78,14 @@
       if (!elements.length) return;
       zoneTemoins.innerHTML = elements.map(function (t) {
         var nom = t.nom || "Anonyme";
-        if (/anonym/i.test(t.identite || "")) nom = "Anonyme";
+        if (/anonym|rien/i.test(t.identite || "")) nom = "Anonyme";
         else if (/pr[ée]nom/i.test(t.identite || "")) nom = String(nom).split(" ")[0];
-        return '<article class="carte">' +
-          '<p class="carte__numero">' + echapper(dateLisible(t.cree_le ? t.cree_le.slice(0, 10) : "")) + "</p>" +
-          "<h3 style=\"font-size:1.1rem\">" + echapper(t.titre) + "</h3>" +
-          '<p class="muted">' + echapper(t.texte) + "</p>" +
-          '<p class="tiny mb-0"><strong>' + echapper(nom) + "</strong></p></article>";
+        return '<article class="temoignage"><h3>' + echapper(t.titre) + "</h3>" +
+          "<p>" + echapper(t.texte) + "</p><footer>" + echapper(nom) + ", " +
+          echapper(dateLisible(t.cree_le ? t.cree_le.slice(0, 10) : "")) + "</footer></article>";
       }).join("");
-      zoneTemoins.hidden = false;
-      var vide = document.querySelector("[data-temoignages-vide]");
-      if (vide) vide.hidden = true;
-    });
-  }
-
-  /* ── Visionneuse des affiches (le dialogue existe sur la page) ── */
-  function lierVisionneuse() {
-    var boite = document.querySelector("[data-visionneuse]");
-    if (!boite || typeof boite.showModal !== "function") return;
-    var image = boite.querySelector("[data-visionneuse-image]");
-    var legende = boite.querySelector("[data-visionneuse-legende]");
-    document.querySelectorAll("[data-affiches] [data-image]").forEach(function (bouton) {
-      bouton.addEventListener("click", function () {
-        image.src = bouton.dataset.image;
-        image.alt = bouton.dataset.legende || "";
-        if (legende) legende.textContent = bouton.dataset.legende || "";
-        boite.showModal();
-      });
+      var bloc = document.querySelector("[data-temoignages-bloc]");
+      if (bloc) bloc.hidden = false;
     });
   }
 })();
